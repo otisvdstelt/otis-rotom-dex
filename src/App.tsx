@@ -332,7 +332,7 @@ export default function App() {
   }, [emotion, entry, activeSection, notFound])
 
   const line = useMemo(() => {
-    if (power === 'asleep') return `Zzz… bzz… zzz… Rotom Dex is fast asleep. ${phone ? 'Swipe up' : 'Tap it'} to power it on!`
+    if (power === 'asleep') return `Zzz… bzz… zzz… Rotom Dex is fast asleep. ${phone ? 'Tap my screen' : 'Tap it'} to power it on!`
     if (power === 'waking') return 'Bzz… bzzt… BZZT! Starting up-roto…'
     if (emotion === 'SCANNING') return `Scanning for ${asked}… bzz… bzzt…`
     if (report) return report.join(' ')

@@ -35,7 +35,7 @@ Built with Vite, React 19, TypeScript, Tailwind CSS v4, Three.js, React Three Fi
 **It fits the device**
 
 - On a computer or tablet it is the full 3D Rotom Dex.
-- On a phone, the phone itself becomes Rotom: swipe up to wake it, and use its soft keys and Poké Ball home key like a phone.
+- On a phone, the phone itself becomes Rotom: tap its sleeping screen to wake it, and use its soft keys and Poké Ball home key like a phone.
 - It works with a keyboard, a mouse or touch, and tones its motion down for people who ask their device for less.
 
 The rest of this page explains how each part works.
@@ -90,12 +90,12 @@ Poke Rotom (click or tap its body) and it hops, squeezes its eyes shut and answe
 ## Where things are shown
 
 - **On Rotom's screen:** all data. The menu of databanks, the list inside one, and the entry itself are real HTML laid onto the 3D screen, so they move with the body. Rotom's eyes hang over the top edge of the screen, as on the real device. While Rotom is idle, scanning or upset, its face has the screen instead, and its grin flashes up each time the screen changes from one menu or list to the next.
-- **In the text box under Rotom:** what Rotom says, typed out as it speaks, in the style of the games' dialogue box.
+- **In the text box under Rotom:** what Rotom says, typed out as it speaks, in the style of the games' dialogue box. The arrow in its corner puts the box away; the small tab left in that corner brings it back, and its dots blink when Rotom has said something new. In the phone form the text box floats over the foot of the display instead of taking a row of its own, so opening or closing it moves nothing, and lists scroll clear of it.
 - **In the key tray:** menu, search, `PREV`, `NEXT` and the dice key.
 
 ### Rotom Phone form
 
-A whole Rotom Dex does not fit on a phone, so below 640 px wide the phone is the Rotom: a red body edge to edge, the eyes at the top hanging over the display, and on the display the same pale screen, face and menus as the Rotom Dex. It is worked like a phone. Asleep it is a lock screen: swipe up (or tap) to power it on. Awake, a bar of soft keys runs along the bottom: Back, Menu, and a Poké Ball home key between them. Tap the Poké Ball, or swipe up from the bar, and a sheet slides up with the search field and the PREV, dice and NEXT keys; it puts itself away again as soon as Rotom has something to do. It scans, shakes and talks the same way, but it never spins: it is the screen in your hand, not an object in space, so a find gets a little jump instead. Three.js is never downloaded. On a bigger screen the phone button in the header (or `?form=phone` in the address) switches to this form.
+A whole Rotom Dex does not fit on a phone, so below 640 px wide the phone is the Rotom: a red body edge to edge, the eyes at the top hanging over the display, and on the display the same pale screen, face and menus as the Rotom Dex. It is worked like a phone. Asleep it is a dark screen: tap the power mark in the middle of it, or the power switch at the bottom right of its rim, to power it on. It is a tap and not a swipe on purpose, because only a tap lets the browser play Rotom's greeting on time. Awake, a bar of soft keys runs along the bottom: Back, Menu, and a Poké Ball home key between them. Tap the Poké Ball, or swipe up from the bar, and a sheet slides up with the search field and the PREV, dice and NEXT keys; it puts itself away again as soon as Rotom has something to do. It scans, shakes and talks the same way, but it never spins: it is the screen in your hand, not an object in space, so a find gets a little jump instead. Three.js is never downloaded. On a bigger screen the phone button in the header (or `?form=phone` in the address) switches to this form.
 
 ### Camera
 
@@ -190,7 +190,7 @@ src/
 - Speech needs a click or key press first; browsers block audio before that. Powering Rotom on is that click.
 - The recorded clips were made with a community voice model on fish.audio. Check that model's terms before using them for anything beyond a personal project.
 - `prefers-reduced-motion` shrinks the shakes and replaces the spin with a small nudge.
-- In the phone form the display shares the phone with the text box and keys, so entries scroll.
+- In the phone form the text box floats over the foot of the display, so entries scroll; put the box away with its arrow to see the whole display.
 
 ## Credits and legal
 

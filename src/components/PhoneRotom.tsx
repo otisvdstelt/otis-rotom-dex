@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronsUp, LayoutGrid, Power, TabletSmartphone } from 'lucide-react'
+import { ChevronLeft, LayoutGrid, Power, TabletSmartphone } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
 import { useElementHeight, useWindowSize } from '../hooks/useLayout'
 import { EMOTION_COLOR, type RotomEmotion } from '../lib/emotion'
@@ -51,9 +51,10 @@ function PokeBall({ className }: { className?: string }) {
  * Rotom's phone form. A whole Rotom Dex will not fit on a phone, so here the
  * phone is the Rotom: a red body edge to edge, its eyes at the top hanging
  * over the display, and on the display the same face and the same menus as
- * the Rotom Dex. It is worked like a phone: asleep it is a lock screen you
- * swipe up; awake, a bar of soft keys runs along the bottom, and its
- * Poké Ball home key (or a swipe up) slides the scan controls into view.
+ * the Rotom Dex, with its text box floating over the foot of it. It is worked like a phone: asleep it is a dark screen you
+ * tap, with a power switch on its rim; awake, a bar of soft keys runs along
+ * the bottom, and its Poké Ball home key (or a swipe up) slides the scan
+ * controls into view.
  */
 export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning, cheer, scanCount, reducedMotion, queryClient }: PhoneRotomProps) {
   const { emotion, power } = state
@@ -75,6 +76,9 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
   const frame = useRef<HTMLDivElement>(null)
   const display = useRef<HTMLDivElement>(null)
   const displayHeight = useElementHeight(display)
+  // What is listed on the display can scroll clear of the text box floating over its foot.
+  const talk = useRef<HTMLDivElement>(null)
+  const talkHeight = useElementHeight(talk)
   const eyes = useRef<HTMLDivElement>(null)
   const eyeImages = useRef<Partial<Record<EyeKey, HTMLImageElement | null>>>({})
   const mouths = useRef<Partial<Record<FaceKey, SVGGElement | null>>>({})
@@ -223,7 +227,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
   return (
     <main className="phone-rotom" data-power={power} data-emotion={emotion} style={{ '--mood': mood } as CSSProperties}>
       <div ref={frame} className="phone-frame" style={framed ? { width, height } : undefined}>
-        <div className="phone-body">
+        <div className="phone-body" style={{ '--talk': `${talkHeight + 16}px` } as CSSProperties}>
           {/* The forehead: tapping it pokes Rotom (or wakes it). */}
           <button type="button" className="absolute inset-x-0 top-0 border-0 bg-transparent" style={{ height: forehead }} onClick={actions.poke} aria-label={awake ? 'Poke Rotom' : 'Wake Rotom'} />
 
@@ -234,25 +238,15 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
             aria-hidden="true"
           />
 
-          {/* Asleep, the whole screen is a lock screen: swipe it up. */}
-          <div className="phone-screen" style={screenBox} {...(power === 'asleep' ? swipe(actions.wake) : {})}>
+          {/* Asleep it is powered on with a press, never a swipe: only a press lets the browser play Rotom's greeting on time. */}
+          <div className="phone-screen" style={screenBox}>
             <div ref={display} className="phone-display" onClick={faceShowing ? actions.poke : undefined}>
               <div className="absolute inset-0" style={{ opacity: screenVisible ? 1 : 0, pointerEvents: screenVisible ? 'auto' : 'none', transition: screenVisible ? 'opacity 220ms ease-out' : 'none' }} aria-hidden={!screenVisible}>
                 <RotomScreenUI state={state} actions={actions} width={screenWidth} titleBar={{ height: overlap + 12, gap: (ROTOM.eye.x - ROTOM.eye.radiusX) * 2 * unit - 14 }} queryClient={queryClient} />
               </div>
             </div>
 
-            <div className="relative px-2 pb-2 pt-4">
-              <DialogueBox
-                text={state.line}
-                voice={state.voice}
-                onReplay={awake && (emotion === 'SUCCESS' || emotion === 'ERROR') ? actions.replay : undefined}
-                suggestions={emotion === 'ERROR' ? state.suggestions : []}
-                onSuggestion={(item) => actions.open({ section: state.activeSection, key: item.key })}
-              />
-            </div>
-
-            {awake ? (
+            {awake && (
               // The soft keys. Swiping up from anywhere on the bar opens the controls too.
               <nav className="phone-nav" aria-label="Rotom Phone keys" {...swipe(() => setSheetWanted(true))}>
                 <button type="button" className="phone-softkey" onClick={actions.back} disabled={nothingToGoBackTo}>
@@ -267,11 +261,6 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
                   Menu
                 </button>
               </nav>
-            ) : (
-              <button type="button" className="phone-lock" onClick={actions.wake} disabled={power === 'waking'}>
-                {power === 'asleep' && <ChevronsUp size={20} strokeWidth={3.2} className="animate-[nudge_1.1s_ease-in-out_infinite]" />}
-                {power === 'asleep' ? 'Swipe up to power on' : 'Starting up'}
-              </button>
             )}
           </div>
 
@@ -307,6 +296,18 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
               ))}
             </g>
           </svg>
+
+          {/* Rotom's text box floats over the foot of the display, so opening or
+              closing it never moves what is on the display. */}
+          <div ref={talk} className="phone-talk" style={{ left: bezel + 8, right: bezel + 8 }}>
+            <DialogueBox
+              text={state.line}
+              voice={state.voice}
+              onReplay={awake && (emotion === 'SUCCESS' || emotion === 'ERROR') ? actions.replay : undefined}
+              suggestions={emotion === 'ERROR' ? state.suggestions : []}
+              onSuggestion={(item) => actions.open({ section: state.activeSection, key: item.key })}
+            />
+          </div>
 
           {/* The scan controls: a sheet that slides up over the display. */}
           <div className="phone-overlay" style={screenBox}>
@@ -346,20 +347,21 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
                   <TabletSmartphone size={15} strokeWidth={2.8} />
                 </button>
               )}
-              {awake && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSheetWanted(false)
-                    actions.sleep()
-                  }}
-                  aria-label="Put Rotom to sleep"
-                  title="Put Rotom to sleep"
-                  className="grid size-8 place-items-center rounded-full border-2 border-white/60 bg-black/15 text-white"
-                >
-                  <Power size={15} strokeWidth={3} />
-                </button>
-              )}
+              {/* One power switch, as on a phone: it wakes Rotom and puts it to sleep. */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSheetWanted(false)
+                  if (awake) actions.sleep()
+                  else actions.wake()
+                }}
+                disabled={power === 'waking'}
+                aria-label={awake ? 'Put Rotom to sleep' : 'Power Rotom on'}
+                title={awake ? 'Put Rotom to sleep' : 'Power on'}
+                className="grid size-8 place-items-center rounded-full border-2 border-white/60 bg-black/15 text-white"
+              >
+                <Power size={15} strokeWidth={3} />
+              </button>
             </span>
           </footer>
         </div>

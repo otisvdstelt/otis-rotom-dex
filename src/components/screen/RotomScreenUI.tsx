@@ -40,7 +40,7 @@ export function RotomScreenUI({ state, actions, width, titleBar, queryClient }: 
   if (state.power !== 'awake') {
     return (
       <div className="size-full" style={{ fontSize: Math.max(16, width / 17) }}>
-        {state.power === 'asleep' ? <ScreenSleep onWake={actions.wake} hint={state.form === 'phone' ? 'Rotom is asleep' : 'Tap to power on'} /> : <ScreenBoot />}
+        {state.power === 'asleep' ? <ScreenSleep onWake={actions.wake} hint="Tap to power on" /> : <ScreenBoot />}
       </div>
     )
   }

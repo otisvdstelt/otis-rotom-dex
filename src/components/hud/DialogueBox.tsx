@@ -1,5 +1,5 @@
 import { RotateCcw, Volume1, Volume2, VolumeX } from 'lucide-react'
-import { useEffect, useRef, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { IndexItem } from '../../databanks/types'
 import { useTypewriter } from '../../hooks/useLayout'
 import { MAX_VOLUME, type RotomVoice } from '../../hooks/useRotomVoice'
@@ -17,12 +17,32 @@ interface DialogueBoxProps {
 
 const BUZZ = /^(BZZ+T[!?]*)\s*/i
 
+/** The bolt the games pin to Rotom's text box. */
+function Bolt({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 18 24" className={className} aria-hidden="true">
+      <path d="M8 1 L1 13 H7.5 L4.5 23 L17 9.5 H10 L14.5 1 Z" fill="#ffd83d" stroke="#d99200" strokeWidth="2" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+/** The arrow from the games' text box: down puts the box away, up brings it back. */
+function Arrow({ up = false, bobbing }: { up?: boolean; bobbing: boolean }) {
+  return (
+    <span className={`block text-[#f2a900] ${bobbing ? 'animate-[nudge_0.9s_ease-in-out_infinite]' : ''}`}>
+      <svg viewBox="0 0 12 8" className={`h-2.5 w-4 ${up ? 'rotate-180' : ''}`} aria-hidden="true">
+        <path d="M1 1 L6 7 L11 1 Z" fill="currentColor" />
+      </svg>
+    </span>
+  )
+}
+
 /**
  * Rotom's words, in the text box the games use for dialogue. The line types
  * itself out as Rotom speaks; tap the box to show the rest at once. The box
  * keeps one size, as in the games: a long line rolls upward as it is written
- * and can be scrolled back afterwards. A small arrow bobs at the corner when
- * it has finished.
+ * and can be scrolled back afterwards. The arrow at its corner puts the box
+ * away, leaving a small tab in the same corner that brings it back.
  */
 export function DialogueBox({ text, voice, onReplay, suggestions = [], onSuggestion }: DialogueBoxProps) {
   const { shown, done, skip } = useTypewriter(text)
@@ -30,23 +50,53 @@ export function DialogueBox({ text, voice, onReplay, suggestions = [], onSuggest
   const buzzShown = shown.slice(0, buzz.length)
   const restShown = shown.slice(buzz.length)
 
+  // Put away, the box remembers the line it was closed on, so the tab can
+  // show when Rotom has said something since.
+  const [closedOn, setClosedOn] = useState<string | null>(null)
+  const closed = closedOn !== null
+  const unheard = closed && closedOn !== text
+
   // Keep the newest words in view while the line is being written.
   const words = useRef<HTMLParagraphElement>(null)
   useEffect(() => {
     if (words.current) words.current.scrollTop = words.current.scrollHeight
-  }, [shown])
+  }, [shown, closed])
+
+  // Screen readers get the whole line once, not letter by letter, whether the box is open or not.
+  const spoken = (
+    <p className="sr-only" role="status" aria-live="polite">
+      {text}
+    </p>
+  )
+
+  if (closed) {
+    return (
+      <div className="ml-auto w-fit">
+        {spoken}
+        <button
+          type="button"
+          onClick={() => setClosedOn(null)}
+          aria-expanded={false}
+          aria-label={unheard ? 'Open Rotom’s text box: it has said something new' : 'Open Rotom’s text box'}
+          title="Open Rotom’s text box"
+          className="textbox textbox-tab flex h-11 animate-[pop-in_0.18s_ease-out] items-center gap-2.5 pl-3 pr-3.5"
+        >
+          <Bolt className="h-5 w-auto" />
+          <span className="flex items-center gap-1" data-unheard={unheard} aria-hidden="true">
+            {[0, 1, 2].map((n) => (
+              <span key={n} className="textbox-dot" style={{ animationDelay: `${n * 0.16}s` }} />
+            ))}
+          </span>
+          <Arrow up bobbing={unheard} />
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <div className="textbox px-4 pb-2.5 pt-3 lg:px-5">
-      {/* The little bolt the games pin to Rotom's text box. */}
-      <svg viewBox="0 0 18 24" className="absolute -top-4 left-6 h-7 w-auto drop-shadow-[0_2px_0_rgb(4_20_90/0.25)]" aria-hidden="true">
-        <path d="M8 1 L1 13 H7.5 L4.5 23 L17 9.5 H10 L14.5 1 Z" fill="#ffd83d" stroke="#d99200" strokeWidth="2" strokeLinejoin="round" />
-      </svg>
-
-      {/* Screen readers get the whole line once, not letter by letter. */}
-      <p className="sr-only" role="status" aria-live="polite">
-        {text}
-      </p>
+    <div className="textbox animate-[pop-in_0.18s_ease-out] px-4 pb-2.5 pt-3 lg:px-5">
+      <Bolt className="absolute -top-4 left-6 h-7 w-auto drop-shadow-[0_2px_0_rgb(4_20_90/0.25)]" />
+      {spoken}
 
       <p
         ref={words}
@@ -106,12 +156,17 @@ export function DialogueBox({ text, voice, onReplay, suggestions = [], onSuggest
         >
           {voice.muted || voice.volume === 0 ? <VolumeX size={17} strokeWidth={2.8} /> : voice.volume < 0.6 ? <Volume1 size={17} strokeWidth={2.8} /> : <Volume2 size={17} strokeWidth={2.8} />}
         </button>
-        {/* The "more" arrow from the games; it only marks that the line is complete. */}
-        <span className={`ml-1 text-[#f2a900] ${done ? 'animate-[nudge_0.9s_ease-in-out_infinite]' : 'opacity-0'}`} aria-hidden="true">
-          <svg viewBox="0 0 12 8" className="h-2.5 w-4">
-            <path d="M1 1 L6 7 L11 1 Z" fill="currentColor" />
-          </svg>
-        </span>
+        {/* The "more" arrow from the games. It bobs once the line is complete, and puts the box away. */}
+        <button
+          type="button"
+          onClick={() => setClosedOn(text)}
+          aria-expanded
+          aria-label="Put Rotom’s text box away"
+          title="Put the text box away"
+          className="grid size-9 place-items-center rounded-full border-0 bg-transparent transition-colors duration-150 hover:bg-[#ffe9a3]"
+        >
+          <Arrow bobbing={done} />
+        </button>
       </div>
     </div>
   )

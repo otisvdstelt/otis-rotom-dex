@@ -30,7 +30,7 @@ Asleep is night: the same sky with the light gone out of it, the mood sun left a
 
 ## Rotom Phone form
 
-On a phone the phone is the Rotom. Red body edge to edge with an inked rim; the same eyes at the top, overlapping the display by the same proportion as on the Dex; the dome between them. The display is the Dex's own: pale, with the blue head and tail, or the same paper menus. Below it sit the text box and a bar of soft keys in the title bar's cyan: Back, a Poké Ball home key riding half out of the bar, and Menu. The scan controls live in a white sheet that slides up over the display from that bar and is pulled down by its handle. Asleep, the screen is a grey-green lock screen that is swiped up. The chin carries the status lamp and the power switch. The display's rim glows in the emotion's colour and pulses the way the Dex's light does.
+On a phone the phone is the Rotom. Red body edge to edge with an inked rim; the same eyes at the top, overlapping the display by the same proportion as on the Dex; the dome between them. The display is the Dex's own: pale, with the blue head and tail, or the same paper menus. The text box floats over the foot of the display (it never takes a row of its own), and below the display runs a bar of soft keys in the title bar's cyan: Back, a Poké Ball home key riding half out of the bar, and Menu. The scan controls live in a white sheet that slides up over the display from that bar and is pulled down by its handle. Asleep, the screen is grey-green with a power mark in the middle and no bar under it; it is tapped, never swiped. The chin carries the status lamp and the power switch, which works in both directions. The display's rim glows in the emotion's colour and pulses the way the Dex's light does.
 
 ## Colour
 
@@ -60,7 +60,7 @@ Everything on Rotom's screen is sized in `em` from one base size that follows th
 ## Surfaces
 
 - **Rotom's screen** (`.dex-screen`): white paper with faint diagonal cyan stripes. A cyan title bar that runs up behind the bottoms of the eyes (on the 3D Dex that last strip is drawn in the scene itself, since HTML cannot pass behind them). Below it a back row, then a scrolling body. Lists are ruled rows with a yellow cursor bar on hover and focus. Sections open with a small cyan heading and a rule (`.dex-heading`).
-- **Text box** (`.textbox`): cream paper in a gold double rim with a small bolt pinned to its top edge. Fixed height: a long line rolls upward as it is typed. A bobbing arrow marks the end of the line.
+- **Text box** (`.textbox`): cream paper in a gold double rim with a small bolt pinned to its top edge. Fixed height: a long line rolls upward as it is typed. A bobbing arrow marks the end of the line and, pressed, puts the box away, leaving a pill-shaped tab in the same corner (bolt, three dots, arrow up) that brings it back; the dots turn red and blink when there is a new line.
 - **Key tray** (`.glass`): pale frosted glass over the sky, holding the keys.
 - **Key** (`.key`): a white pill with a cyan rim and a visible skirt it sinks into when pressed. Yellow for the scan key. Hover adds a yellow ring; while a scan runs, stripes of charge run across the scan key.
 - **Chip** (`.dex-chip`): a white pill for linked entries; turns yellow on hover.

@@ -37,8 +37,9 @@ body,
 body {
   margin: 0;
   overflow: hidden;
-  /* Matches the 3D night sky Rotom sleeps under, so nothing flashes while the canvas loads. */
-  background: linear-gradient(180deg, #1b2478, #24409f 55%, #2a5fc0);
+  /* Matches the 3D night sky Rotom sleeps under, so nothing flashes while the canvas loads.
+     The plain colour under it is what a phone's browser tints its own bars with. */
+  background: #24409f linear-gradient(180deg, #1b2478, #24409f 55%, #2a5fc0);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: 17px;
@@ -183,6 +184,34 @@ button:disabled {
   box-shadow:
     inset 0 0 0 3px #ffe9a3,
     0 12px 22px -12px rgb(4 20 90 / 0.65);
+}
+
+/* Put away, the text box is a small tab in the corner its arrow sat in. */
+.textbox-tab {
+  border-radius: 999px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.textbox-tab:hover {
+  background: linear-gradient(180deg, #fffbe6, #ffe9a3);
+}
+
+.textbox-tab:active {
+  transform: translateY(2px);
+}
+
+/* Three dots of unsaid text. They light up and blink when Rotom has said something new. */
+.textbox-dot {
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: 999px;
+  background: #d9b96a;
+}
+
+[data-unheard='true'] > .textbox-dot {
+  background: var(--color-rotom);
+  animation: blink 0.9s steps(1) infinite;
 }
 
 /* The volume slider in the text box: a cyan track that fills to a round white thumb. */
@@ -510,7 +539,7 @@ button.dex-chip:focus-visible {
   }
 }
 
-/* The screen: display, text box and soft keys. Pale like the Rotom Dex's own,
+/* The screen: display and soft keys. Pale like the Rotom Dex's own,
    and its rim glows in the colour of Rotom's mood. */
 .phone-screen,
 .phone-overlay {
@@ -538,8 +567,6 @@ button.dex-chip:focus-visible {
 .phone-rotom[data-power='asleep'] .phone-screen {
   animation: none;
   box-shadow: 0 0 0 3px #1c1e2e;
-  /* The lock screen is swiped, not scrolled. */
-  touch-action: none;
 }
 
 .phone-rotom[data-power='waking'] .phone-screen,
@@ -630,22 +657,33 @@ button.dex-chip:focus-visible {
 }
 
 
-/* Asleep, the bar is the lock screen's instruction. */
-.phone-lock {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  height: 58px;
-  border: 0;
-  border-radius: 0 0 10px 10px;
-  background: rgb(0 0 0 / 0.24);
-  color: #e9f3ee;
-  font-size: 0.8rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+/* Rotom's text box floats over the foot of the display, just above the soft
+   keys. It is a layer of its own, so it takes no room from the display and
+   only the box itself (or its tab, when put away) takes taps. */
+.phone-talk {
+  position: absolute;
+  /* Above the soft keys, and clear of the Poké Ball that rides out of the top of them. */
+  bottom: calc(42px + env(safe-area-inset-bottom) + 58px + 22px);
+  pointer-events: none;
+}
+
+.phone-talk > * {
+  pointer-events: auto;
+}
+
+/* Asleep or starting up there are no soft keys to sit above. */
+.phone-rotom:not([data-power='awake']) .phone-talk {
+  bottom: calc(42px + env(safe-area-inset-bottom) + 8px);
+}
+
+/* What is listed on the display can scroll clear of the text box. */
+.phone-screen .dex-scroll {
+  padding-bottom: var(--talk, 0px);
+}
+
+/* With no soft keys under it, the sleeping display reaches the screen's rounded foot. */
+.phone-rotom:not([data-power='awake']) .phone-display {
+  border-radius: 10px;
 }
 
 /* The sheet of scan controls lives in a layer of its own over the screen. */
