@@ -8,6 +8,10 @@ import '@fontsource/m-plus-rounded-1c/latin-900.css'
 import './index.css'
 import App from './App.tsx'
 
+// Opened from a phone's home screen it runs full screen; the stylesheet sizes the page differently there.
+const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
+if (standalone) document.documentElement.dataset.standalone = ''
+
 const queryClient = new QueryClient()
 
 createRoot(document.getElementById('root')!).render(

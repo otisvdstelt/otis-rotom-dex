@@ -805,3 +805,22 @@ button.dex-chip:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Opened from the home screen, iOS runs the page under the status bar but
+   still measures it that much shorter than the screen, which leaves a strip of
+   sky along the bottom. Viewport units measure the whole screen there, so the
+   page is sized with those instead. (Unlayered, so it outranks the rules above.) */
+html[data-standalone],
+html[data-standalone] body,
+html[data-standalone] #root,
+html[data-standalone] .h-dvh {
+  height: 100vh;
+  height: 100lvh;
+}
+
+html[data-standalone] .phone-rotom {
+  inset: 0 auto auto 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100lvh;
+}
