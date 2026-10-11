@@ -37,7 +37,6 @@ const PART_MATERIAL: Record<RotomPart, keyof typeof MATERIALS> = {
   ArmL: 'red',
   HandR: 'red',
   HandL: 'red',
-  HandSensor: 'redDeep',
   BackBolts: 'redDeep',
   BackPort: 'redDeep',
   BackLens: 'white',

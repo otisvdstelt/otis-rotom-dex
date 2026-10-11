@@ -30,7 +30,6 @@ export const ROTOM_PARTS = [
   'ArmL',
   'HandR',
   'HandL',
-  'HandSensor',
   'BackBolts',
   'BackPort',
   'BackLens',
@@ -51,7 +50,6 @@ export const ROTOM_PART_PIVOT: Partial<Record<RotomPart, [number, number, number
   HandR: ARM_PIVOT,
   ArmL: ARM_PIVOT_LEFT,
   HandL: ARM_PIVOT_LEFT,
-  HandSensor: ARM_PIVOT_LEFT,
 }
 
 /** Centre of the paddle hand, in the arm's own space (right arm; mirror X for the left). */
@@ -386,12 +384,10 @@ export function buildRotomGeometries(): Record<RotomPart, BufferGeometry> {
   const armR = extrude(roundedPolygon(ARM_OUTLINE, ARM_CORNERS, new Shape()), armOptions)
   const armL = extrude(roundedPolygon(mirrorX(ARM_OUTLINE), [...ARM_CORNERS].reverse(), new Shape()), armOptions)
 
-  // The oval boss on each hand, front and back, in that arm's own space. The
-  // left hand's front boss carries a smaller raised oval, as on the model sheet.
+  // The oval boss on each hand, front and back, in that arm's own space.
   const [hx, hy] = HAND_CENTER
   const handR = merged([dome(0.17, 0.05, 0.09, hx, hy, 1.65), toBack(dome(0.17, 0.05, 0.09, -hx, hy, 1.65))])
   const handL = merged([dome(0.17, 0.05, 0.09, -hx, hy, 1.65), toBack(dome(0.17, 0.05, 0.09, hx, hy, 1.65))])
-  const handSensor = dome(0.075, 0.03, 0.134, -hx, hy, 1.5, 16)
 
   // Back: two moulded lightning bolts, the camera port between them, a small button.
   const boltOptions: ExtrudeOptions = { depth: 0.012, bevel: 0.014, frontZ: frontZ + 0.03, bevelSegments: 2, curveSegments: 4 }
@@ -427,7 +423,6 @@ export function buildRotomGeometries(): Record<RotomPart, BufferGeometry> {
     ArmL: armL,
     HandR: handR,
     HandL: handL,
-    HandSensor: handSensor,
     BackBolts: backBolts,
     BackPort: backPort,
     BackLens: backLens,

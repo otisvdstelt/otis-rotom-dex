@@ -61,7 +61,6 @@ const PART_MATERIAL: Record<RotomPart, Material> = {
   ArmL: materials.red,
   HandR: materials.red,
   HandL: materials.red,
-  HandSensor: materials.redDeep,
   BackBolts: materials.redDeep,
   BackPort: materials.redDeep,
   BackLens: materials.white,
@@ -75,7 +74,7 @@ const NO_OUTLINE: ReadonlySet<RotomPart> = new Set(['ScreenFrame', 'Screen', 'Br
 const HAS_AURA: ReadonlySet<RotomPart> = new Set(['Body', 'Spike', 'ArmR', 'ArmL', 'Feet'])
 const SPIKE_PARTS: RotomPart[] = ['Spike']
 const RIGHT_ARM_PARTS: RotomPart[] = ['ArmR', 'HandR']
-const LEFT_ARM_PARTS: RotomPart[] = ['ArmL', 'HandL', 'HandSensor']
+const LEFT_ARM_PARTS: RotomPart[] = ['ArmL', 'HandL']
 const MOVING: ReadonlySet<RotomPart> = new Set([...SPIKE_PARTS, ...RIGHT_ARM_PARTS, ...LEFT_ARM_PARTS])
 
 const SCREEN_WHITE = new Color('#f4f7ff')
