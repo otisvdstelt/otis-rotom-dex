@@ -4,6 +4,42 @@ An interactive 3D Rotom Dex, modelled on the one from the Pokémon anime and Pok
 
 Built with Vite, React 19, TypeScript, Tailwind CSS v4, Three.js, React Three Fiber, drei and TanStack Query.
 
+## What Rotom Dex can do
+
+**It is a character, not a page**
+
+- It starts every visit asleep under a night sky. Tap it and it powers on, runs a start-up check, hops and greets you.
+- It reacts to everything with its whole body: it floats while idle, crackles with sparks while it scans, lunges and spins when it finds something, and shakes and slumps when it does not.
+- Its eyes blink, follow your pointer and change with its mood, and its face shows on its own screen whenever no data is on it.
+- It talks in its own recorded voice (40 clips), with a volume control and a mute switch.
+- Poke it and it hops and answers back.
+- You can drag to look at it from any side, and bring its screen up close to read.
+
+**It knows the Pokémon world**
+
+- **Pokémon:** all 1,025 species plus 326 alternate forms (Mega Evolutions, Gigantamax, regional forms, Totems and more), each with types, base stats, Pokédex entry, height and weight, abilities, level-up moves, evolution family, cry, and artwork in normal and shiny colours.
+- **Berries, Snacks, Items and Poké Balls:** what each one does and which Pokémon are found holding it.
+- **Moves and Abilities:** type, power, accuracy and effect, and every Pokémon that has them.
+- **Types:** what each type is strong and weak against, attacking and defending.
+- **Regions and gym badges:** every region with its games, places, partner Pokémon and badges.
+- **Natures:** which stats they raise and lower, and the flavours those Pokémon like.
+
+**It is quick to get around**
+
+- One search field looks through every databank at once, from anywhere, and shows matches as you type.
+- Everything is linked: tap a Pokémon's type, ability, move or form to jump straight to it.
+- Step through a databank with PREV and NEXT, or let the dice key pick one at random.
+- Long lists load as you scroll, so even 2,200 items stay smooth.
+- Every entry has its own link you can share.
+
+**It fits the device**
+
+- On a computer or tablet it is the full 3D Rotom Dex.
+- On a phone, the phone itself becomes Rotom: swipe up to wake it, and use its soft keys and Poké Ball home key like a phone.
+- It works with a keyboard, a mouse or touch, and tones its motion down for people who ask their device for less.
+
+The rest of this page explains how each part works.
+
 ## Run it
 
 ```bash
