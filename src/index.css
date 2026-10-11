@@ -1,0 +1,758 @@
+@import 'tailwindcss';
+
+@theme {
+  /* M PLUS Rounded 1c stands in for the rounded gothic the Sun & Moon games set their menus in. */
+  --font-sans: 'M PLUS Rounded 1c', ui-rounded, 'Hiragino Maru Gothic ProN', system-ui, sans-serif;
+
+  /* Menu ink and paper, as on the games' touch-screen menus. */
+  --color-ink: #25305a;
+  --color-ink-soft: #55648c;
+  --color-paper: #ffffff;
+  --color-pale: #eef7fd;
+  --color-rule: #cfe6f4;
+
+  /* Rotom Dex cyan: title bars, borders, links. */
+  --color-aqua: #36b3e6;
+  --color-aqua-deep: #1783b8;
+  --color-aqua-ink: #0f5d86;
+
+  /* Selection yellow: the cursor colour of every Pokémon menu. */
+  --color-volt: #ffd83d;
+  --color-volt-deep: #d99200;
+  --color-volt-ink: #5a3b00;
+
+  --color-rotom: #de3b3d;
+  --color-sky: #1657e6;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  /* Matches the 3D night sky Rotom sleeps under, so nothing flashes while the canvas loads. */
+  background: linear-gradient(180deg, #1b2478, #24409f 55%, #2a5fc0);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-volt);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-volt);
+  color: var(--color-ink);
+}
+
+}
+
+@layer components {
+/* ------------------------------------------------------------ HUD: glass and keys */
+
+/* The tray the keys sit in: pale frosted glass over the sky. */
+.glass {
+  border: 2px solid rgb(255 255 255 / 0.65);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 0.3);
+  backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow:
+    0 14px 28px -14px rgb(4 20 90 / 0.6),
+    inset 0 1.5px 0 rgb(255 255 255 / 0.7);
+}
+
+/* A menu button from the games: a white pill with a cyan rim that sinks when pressed. */
+.key {
+  --face: #ffffff;
+  --rim: var(--color-aqua);
+  --skirt: var(--color-aqua-deep);
+  --legend: var(--color-aqua-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 52px;
+  padding: 0 1rem;
+  border: 3px solid var(--rim);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff, var(--face) 55%);
+  color: var(--legend);
+  font-weight: 900;
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow:
+    0 5px 0 var(--skirt),
+    0 11px 14px -6px rgb(4 20 90 / 0.55);
+  transform: translateY(-3px);
+  transition:
+    transform 90ms var(--ease-out-expo),
+    box-shadow 90ms var(--ease-out-expo),
+    filter 150ms;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Hover charges the key: the neon state. */
+.key:hover:not(:disabled) {
+  filter: brightness(1.04);
+  box-shadow:
+    0 5px 0 var(--skirt),
+    0 0 0 4px rgb(255 216 61 / 0.85),
+    0 11px 14px -6px rgb(4 20 90 / 0.55);
+}
+
+.key:active:not(:disabled),
+.key[data-pressed='true'] {
+  transform: translateY(2px);
+  box-shadow:
+    0 0 0 var(--skirt),
+    0 3px 6px -2px rgb(4 20 90 / 0.5);
+}
+
+.key:disabled {
+  filter: saturate(0.25) brightness(0.92);
+  opacity: 0.75;
+}
+
+.key-volt {
+  --face: var(--color-volt);
+  --rim: #ffb400;
+  --skirt: var(--color-volt-deep);
+  --legend: var(--color-volt-ink);
+  background: linear-gradient(180deg, #ffe98a, var(--face) 55%);
+}
+
+.key[aria-pressed='true'] {
+  --face: #c8ecfb;
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 0 var(--skirt),
+    0 4px 8px -3px rgb(4 20 90 / 0.5);
+}
+
+/* While a scan runs, charge runs across the scan key. */
+.key[aria-busy='true'] {
+  background-image: repeating-linear-gradient(-55deg, transparent 0 12px, rgb(255 255 255 / 0.6) 12px 22px), linear-gradient(var(--face), var(--face));
+  background-size:
+    200% 100%,
+    auto;
+  animation: charge 0.7s linear infinite;
+}
+
+@keyframes charge {
+  to {
+    background-position:
+      -39px 0,
+      0 0;
+  }
+}
+
+/* ------------------------------------------------------------ HUD: the text box */
+
+/* Rotom's lines appear in the games' text box: cream paper inside a golden rim. */
+.textbox {
+  position: relative;
+  border: 3px solid #f2a900;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff, #fff8d6);
+  color: var(--color-ink);
+  box-shadow:
+    inset 0 0 0 3px #ffe9a3,
+    0 12px 22px -12px rgb(4 20 90 / 0.65);
+}
+
+/* The volume slider in the text box: a cyan track that fills to a round white thumb. */
+.volume {
+  height: 1.5rem;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  accent-color: var(--color-aqua-deep);
+}
+
+.volume::-webkit-slider-runnable-track {
+  height: 0.45rem;
+  border-radius: 999px;
+  /* Filled up to the thumb; the component sets --fill. */
+  background: linear-gradient(90deg, var(--color-aqua) var(--fill, 50%), var(--color-rule) var(--fill, 50%));
+  box-shadow: inset 0 1px 2px rgb(37 48 90 / 0.25);
+}
+
+.volume::-moz-range-track {
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--color-rule);
+}
+
+.volume::-moz-range-progress {
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--color-aqua);
+}
+
+.volume::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-top: -0.3rem;
+  border: 3px solid var(--color-aqua);
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 0 var(--color-aqua-deep);
+}
+
+.volume::-moz-range-thumb {
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 3px solid var(--color-aqua);
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 0 var(--color-aqua-deep);
+}
+
+.volume:focus-visible {
+  outline: none;
+}
+
+.volume:focus-visible::-webkit-slider-thumb {
+  border-color: var(--color-volt-deep);
+  box-shadow: 0 0 0 3px var(--color-volt);
+}
+
+/* ------------------------------------------------------------ Rotom's screen */
+
+/* Everything shown on Rotom's own display. Sizes inside are in em, so the
+   whole interface scales with the screen's size on the device. */
+.dex-screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  color: var(--color-ink);
+  font-weight: 700;
+  line-height: 1.3;
+  background:
+    repeating-linear-gradient(135deg, rgb(54 179 230 / 0.07) 0 0.45em, transparent 0.45em 1.1em),
+    linear-gradient(180deg, #ffffff, #f1f8fe);
+}
+
+/* Title bar. Rotom's eyes overlap its outer thirds, so the title sits between them. */
+.dex-titlebar {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: linear-gradient(180deg, #62caf2, var(--color-aqua));
+  border-bottom: 0.14em solid var(--color-aqua-deep);
+  color: #ffffff;
+  text-shadow: 0 0.08em 0 rgb(15 93 134 / 0.7);
+}
+
+.dex-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-aqua) transparent;
+  /* On the 3D Rotom Dex this list sits inside a 3D transform. Unless it has a
+     layer of its own, Chrome delivers the wheel event but never scrolls it. */
+  will-change: scroll-position;
+  transform: translateZ(0);
+}
+
+/* A selectable menu row: pale stripes, and the yellow cursor bar on hover or focus. */
+.dex-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  width: 100%;
+  min-height: 2.9em;
+  padding: 0.2em 0.8em;
+  border: 0;
+  border-bottom: 0.08em solid var(--color-rule);
+  background: transparent;
+  text-align: left;
+}
+
+button.dex-row:hover,
+button.dex-row:focus-visible {
+  outline: none;
+  background: linear-gradient(90deg, var(--color-volt), #fff3b0);
+  box-shadow: inset 0.3em 0 0 var(--color-volt-deep);
+}
+
+/* A small cyan caption above a value. */
+.dex-label {
+  font-size: 0.78em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--color-aqua-ink);
+}
+
+.dex-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0 0 0.45em;
+  font-size: 0.82em;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-aqua-ink);
+}
+
+/* The rule after a heading, as on the games' summary screens. */
+.dex-heading::after {
+  content: '';
+  flex: 1;
+  height: 0.16em;
+  border-radius: 1em;
+  background: var(--color-rule);
+}
+
+.dex-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  min-height: 2.2em;
+  padding: 0.1em 0.7em;
+  border: 0.13em solid var(--color-rule);
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 0.92em;
+  line-height: 1.15;
+}
+
+button.dex-chip {
+  border-color: var(--color-aqua);
+  color: var(--color-aqua-ink);
+}
+
+/* A chip that is switched on (the shiny switch). */
+button.dex-chip[aria-pressed='true'] {
+  border-color: var(--color-volt-deep);
+  background: var(--color-volt);
+  color: var(--color-volt-ink);
+}
+
+button.dex-chip:disabled {
+  opacity: 0.5;
+}
+
+button.dex-chip:hover:not(:disabled),
+button.dex-chip:focus-visible {
+  outline: none;
+  border-color: var(--color-volt-deep);
+  background: var(--color-volt);
+  color: var(--color-volt-ink);
+}
+
+.dex-meter {
+  height: 0.8em;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #d9e8f3;
+  box-shadow: inset 0 0.1em 0.15em rgb(37 48 90 / 0.25);
+}
+
+.dex-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  box-shadow: inset 0 0.18em 0 rgb(255 255 255 / 0.45);
+}
+
+/* ------------------------------------------------------------ Rotom's screen, switched off */
+
+/* The dull grey-green of the unresponsive Pokédex in the games, with scan lines. */
+.dex-off {
+  background:
+    repeating-linear-gradient(0deg, rgb(255 255 255 / 0.07) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #5c7b74, #4a655f);
+}
+
+/* Starting up: the picture rolls and flickers before it holds. */
+.dex-static {
+  animation: static-roll 0.35s steps(3) 4;
+}
+
+@keyframes static-roll {
+  0% {
+    background-position:
+      0 0,
+      0 0;
+    filter: brightness(1.5);
+  }
+  50% {
+    filter: brightness(0.75);
+  }
+  100% {
+    background-position:
+      0 12px,
+      0 0;
+    filter: brightness(1);
+  }
+}
+
+@keyframes snore {
+  0% {
+    opacity: 0;
+    transform: translate(-0.4em, 0.5em) scale(0.6);
+  }
+  35% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0.5em, -0.9em) scale(1.1);
+  }
+}
+
+@keyframes boot-line {
+  from {
+    opacity: 0;
+    transform: translateX(-0.5em);
+  }
+}
+
+@keyframes boot-bar {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ------------------------------------------------------------ Rotom's phone form */
+
+/* On a phone, the phone is the Rotom: a red body edge to edge. */
+.phone-rotom {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  /* It is handled like a device: swipes must not select its text. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.phone-rotom input {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Jumps and shakes as one piece. */
+.phone-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.phone-body {
+  position: absolute;
+  inset: 0;
+  background: var(--color-rotom);
+  /* The ink line and the shaded rim of a cel-shaded body. */
+  box-shadow:
+    inset 0 0 0 3px #7c1820,
+    inset 0 -14px 0 rgb(124 24 32 / 0.35);
+  border-radius: 26px;
+  overflow: hidden;
+}
+
+.phone-body {
+  transition: filter 500ms ease-out;
+}
+
+/* Asleep: the colour drains out of it. */
+.phone-rotom[data-power='asleep'] .phone-body {
+  filter: saturate(0.6) brightness(0.68);
+}
+
+/* Starting up and scanning: the same electric jitter. */
+.phone-rotom[data-power='waking'] .phone-body,
+.phone-rotom[data-power='awake'][data-emotion='SCANNING'] .phone-body {
+  animation: phone-jitter 0.11s steps(2) infinite;
+}
+
+@keyframes phone-jitter {
+  0% {
+    transform: translate(-1.2px, 0.8px) rotate(-0.12deg);
+  }
+  50% {
+    transform: translate(1.1px, -0.9px) rotate(0.1deg);
+  }
+  100% {
+    transform: translate(-0.4px, -0.6px) rotate(-0.05deg);
+  }
+}
+
+/* The screen: display, text box and soft keys. Pale like the Rotom Dex's own,
+   and its rim glows in the colour of Rotom's mood. */
+.phone-screen,
+.phone-overlay {
+  position: absolute;
+  bottom: calc(42px + env(safe-area-inset-bottom));
+  border-radius: 12px;
+}
+
+.phone-screen {
+  display: flex;
+  flex-direction: column;
+  background: #f4f7ff;
+  box-shadow:
+    0 0 0 3px #1c1e2e,
+    0 0 0 5px var(--mood),
+    0 0 18px 6px var(--mood);
+  animation: phone-glow 2.4s ease-in-out infinite;
+}
+
+/* Switched off, the whole screen is the dull grey-green of the sleeping display. */
+.phone-rotom:not([data-power='awake']) .phone-screen {
+  background: linear-gradient(180deg, #4a655f, #3f5751);
+}
+
+.phone-rotom[data-power='asleep'] .phone-screen {
+  animation: none;
+  box-shadow: 0 0 0 3px #1c1e2e;
+  /* The lock screen is swiped, not scrolled. */
+  touch-action: none;
+}
+
+.phone-rotom[data-power='waking'] .phone-screen,
+.phone-rotom[data-emotion='SCANNING'] .phone-screen {
+  animation: phone-glow 0.14s steps(2) infinite;
+}
+
+.phone-rotom[data-power='awake'][data-emotion='SUCCESS'] .phone-screen {
+  animation: none;
+}
+
+.phone-rotom[data-power='awake'][data-emotion='ERROR'] .phone-screen {
+  animation: phone-glow 0.5s steps(1) infinite;
+}
+
+@keyframes phone-glow {
+  50% {
+    box-shadow:
+      0 0 0 3px #1c1e2e,
+      0 0 0 5px color-mix(in srgb, var(--mood) 45%, #1c1e2e),
+      0 0 6px 1px var(--mood);
+  }
+}
+
+.phone-display {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 10px 10px 0 0;
+}
+
+/* The bar of soft keys along the bottom of the screen, in the title bar's cyan. */
+.phone-nav {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 58px;
+  border-radius: 0 0 10px 10px;
+  background: linear-gradient(180deg, #62caf2, var(--color-aqua));
+  /* Swiped up to open the controls. */
+  touch-action: none;
+}
+
+.phone-softkey {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgb(15 93 134 / 0.7);
+}
+
+/* Pressed, a soft key dips; it does not change colour. */
+.phone-softkey:active:not(:disabled) {
+  transform: translateY(2px) scale(0.95);
+}
+
+.phone-softkey:disabled {
+  opacity: 0.4;
+}
+
+/* The home key: a Poké Ball riding half out of the bar. */
+.phone-home {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  margin-top: -22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  filter: drop-shadow(0 4px 0 rgb(15 93 134 / 0.55));
+  transition: transform 120ms var(--ease-out-expo);
+}
+
+.phone-home:active {
+  transform: translateY(3px) scale(0.96);
+}
+
+
+/* Asleep, the bar is the lock screen's instruction. */
+.phone-lock {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 58px;
+  border: 0;
+  border-radius: 0 0 10px 10px;
+  background: rgb(0 0 0 / 0.24);
+  color: #e9f3ee;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* The sheet of scan controls lives in a layer of its own over the screen. */
+.phone-overlay {
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.phone-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgb(12 24 60 / 0.42);
+  opacity: 0;
+  transition: opacity 220ms ease-out;
+}
+
+.phone-scrim[data-open='true'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.phone-scrim[data-clear='true'] {
+  background: transparent;
+}
+
+.phone-sheet {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 0 12px 14px;
+  border: 3px solid var(--color-aqua);
+  border-radius: 20px 20px 10px 10px;
+  background: linear-gradient(180deg, #ffffff, var(--color-pale));
+  box-shadow: 0 -12px 28px -8px rgb(4 20 90 / 0.5);
+  pointer-events: auto;
+  transform: translateY(108%);
+  transition: transform 300ms var(--ease-out-expo);
+}
+
+.phone-sheet[data-open='true'] {
+  transform: translateY(0);
+}
+
+/* The handle the sheet is pulled down by. */
+.phone-grip {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 30px;
+  border: 0;
+  background: transparent;
+  touch-action: none;
+}
+
+.phone-grip span {
+  width: 46px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--color-rule);
+}
+
+.phone-chin {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: calc(42px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pixelated {
+  image-rendering: pixelated;
+}
+
+.scrollbar-hidden {
+  scrollbar-width: none;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+@keyframes nudge {
+  50% {
+    transform: translateY(0.2em);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.6em);
+  }
+}
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
