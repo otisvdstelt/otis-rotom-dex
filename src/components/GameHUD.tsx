@@ -47,7 +47,7 @@ export function GameHUD({ state, actions, bandRef, searchRef }: GameHUDProps) {
 
   return (
     <div className="pointer-events-none relative z-10 flex h-dvh flex-col justify-between">
-      <header className="flex items-center justify-between gap-3 p-3 lg:p-5">
+      <header className="flex items-center justify-between gap-3 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:p-5 lg:pt-[max(1.25rem,env(safe-area-inset-top))]">
         <Wordmark />
         <div className="pointer-events-auto flex items-center gap-2">
           <StatusChip emotion={state.emotion} power={state.power} />

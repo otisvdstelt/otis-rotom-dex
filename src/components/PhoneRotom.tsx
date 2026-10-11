@@ -69,7 +69,11 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
   const unit = (width * 1.15) / ROTOM.eyes.width
   const bezel = Math.max(8, Math.round(width * 0.03))
   const overlap = (SCREEN_TOP - (ROTOM.eye.y - ROTOM.eye.radiusY)) * unit
-  const forehead = Math.round(ROTOM.eye.radiusY * 2 * unit - overlap + 0.09 * unit)
+  // Opened from the home screen it runs full screen, under the phone's status
+  // bar and notch: the red forehead grows by that much, so the eyes stay clear.
+  const notchProbe = useRef<HTMLDivElement>(null)
+  const notch = useElementHeight(notchProbe)
+  const forehead = Math.round(ROTOM.eye.radiusY * 2 * unit - overlap + 0.09 * unit) + notch
   const domeHeight = (ROTOM.brow.top - SCREEN_TOP) * unit
   const screenWidth = width - bezel * 2
 
@@ -226,6 +230,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
 
   return (
     <main className="phone-rotom" data-power={power} data-emotion={emotion} style={{ '--mood': mood } as CSSProperties}>
+      <div ref={notchProbe} className="phone-notch" aria-hidden="true" />
       <div ref={frame} className="phone-frame" style={framed ? { width, height } : undefined}>
         <div className="phone-body" style={{ '--talk': `${talkHeight + 16}px` } as CSSProperties}>
           {/* The forehead: tapping it pokes Rotom (or wakes it). */}

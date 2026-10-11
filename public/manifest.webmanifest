@@ -1,0 +1,15 @@
+{
+  "name": "Rotom Dex",
+  "short_name": "Rotom Dex",
+  "description": "An interactive Rotom Dex that scans, reacts and talks.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#24409f",
+  "theme_color": "#0b1f9c",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

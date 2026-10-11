@@ -488,6 +488,17 @@ button.dex-chip:focus-visible {
   -webkit-user-select: none;
 }
 
+/* Measures the room the phone's status bar and notch take when Rotom runs full screen. */
+.phone-notch {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: env(safe-area-inset-top, 0px);
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .phone-rotom input {
   user-select: text;
   -webkit-user-select: text;
