@@ -1,13 +1,11 @@
-// Bakes the home-screen icons from the favicon: Rotom on the title-card blue,
-// filling the whole square (phones round the corners themselves).
+// Builds the home screen icons from the favicon
 import { mkdirSync, readFileSync } from 'node:fs'
 import sharp from 'sharp'
 
 const favicon = readFileSync('public/favicon.svg', 'utf8')
 const drawing = favicon.slice(favicon.indexOf('>') + 1, favicon.lastIndexOf('</svg>'))
 
-// The favicon is drawn on a 64-unit square. Here it sits in the middle of a
-// 100-unit one, small enough to survive a round "maskable" crop.
+// Centered small enough to survive a round maskable crop
 const icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">

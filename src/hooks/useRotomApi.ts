@@ -3,7 +3,7 @@ import { cleanText, english, fetchJson, generationLabel, idFromUrl, pokemonArtwo
 import { nameForm } from '../lib/forms'
 import { EGG_GROUP_NAMES, pokemonLabel } from '../lib/types'
 
-// ------------------------------------------------------------ PokeAPI payloads (only the fields read here)
+// PokeAPI payloads, only fields used here
 
 interface ApiPokemon {
   id: number
@@ -38,10 +38,10 @@ interface ApiSpecies {
   varieties: { is_default: boolean; pokemon: NamedResource }[]
 }
 
-// ------------------------------------------------------------ what the hook returns
+// Hook result
 
 export interface RotomStat {
-  /** PokeAPI stat slug: "hp", "attack", "defense", "special-attack", "special-defense", "speed". */
+  /** PokeAPI stat slug */
   name: string
   value: number
 }
@@ -58,44 +58,44 @@ export interface RotomMove {
   level: number
 }
 
-/** One of the forms a species comes in. */
+/** One form of a species */
 export interface RotomForm {
-  /** PokeAPI's number for it: the species' own for its ordinary form, 10001 and up for the others. */
+  /** PokeAPI id, 10001 and up for alternate forms */
   id: number
   slug: string
   name: string
-  /** "Mega Evolution", "Gigantamax", "Regional form"…; null for the ordinary form. */
+  /** Form kind, null for the ordinary form */
   kind: string | null
 }
 
-/** A Pokémon as Rotom reports it. The first five fields are the core record; the rest fill out the profile. */
+/** A Pokémon as Rotom reports it */
 export interface RotomPokemon {
-  /** Its number: the National Pokédex number, or PokeAPI's own (10001 and up) for an alternate form. */
+  /** National Dex number, or the PokeAPI id for alternate forms */
   id: number
-  /** "Charizard"; for an alternate form, the form's name: "Mega Charizard X". */
+  /** Name, or the form name for alternate forms */
   name: string
-  /** Element types, primary first: ["grass", "poison"]. */
+  /** Types, primary first */
   types: string[]
   stats: RotomStat[]
-  /** English Pokédex entry with the cartridge line breaks removed. */
+  /** English Dex entry, cleaned */
   description: string
 
-  /** PokeAPI slug of the exact form that was looked up. */
+  /** Slug of the form looked up */
   slug: string
-  /** National Pokédex number of its species, whichever form this is. */
+  /** Species Dex number */
   speciesId: number
-  /** What kind of form this is; null for the ordinary one. */
+  /** Form kind, null for the ordinary one */
   formKind: string | null
-  /** Every form of its species, this one included, ordinary form first. */
+  /** All forms of the species, ordinary first */
   forms: RotomForm[]
   genus: string
   artwork: string
-  /** The same artwork in its shiny colours, where there is one. */
+  /** Shiny artwork if any */
   shinyArtwork: string | null
   cry: string | null
-  /** Metres. */
+  /** Metres */
   height: number
-  /** Kilograms. */
+  /** Kilograms */
   weight: number
   abilities: RotomAbility[]
   eggGroups: string[]
@@ -103,18 +103,14 @@ export interface RotomPokemon {
   captureRate: number
   generation: string
   rank: 'standard' | 'legendary' | 'mythical' | 'baby'
-  /** Moves learned by levelling up, earliest first. */
+  /** Level up moves, earliest first */
   levelUpMoves: RotomMove[]
   evolutionChainUrl: string | null
 }
 
-// ------------------------------------------------------------ fetching
+// Fetching
 
-/**
- * Looks a Pokémon up in two steps, as the Pokédex itself is organised:
- *  1. pokemon/{id or name} for the creature: id, types, base stats.
- *  2. its species.url for the species: the English name and Pokédex entry.
- */
+/** Fetches the Pokémon, then its species for the name and Dex entry */
 export async function fetchRotomPokemon(idOrName: string | number, signal?: AbortSignal): Promise<RotomPokemon> {
   const key = slugify(String(idOrName)).replace(/^0+(?=\d)/, '')
   if (!key) throw new RotomApiError('not-found', 'Nothing to look up')
@@ -123,8 +119,7 @@ export async function fetchRotomPokemon(idOrName: string | number, signal?: Abor
   try {
     pokemon = await fetchJson<ApiPokemon>(`pokemon/${key}`, signal)
   } catch (error) {
-    // Some species have no plain-named form ("deoxys" is really "deoxys-normal",
-    // "mimikyu" is "mimikyu-disguised"), so ask the species which form is its default.
+    // Some species have no plain form, so ask for the default
     if (!(error instanceof RotomApiError) || error.kind !== 'not-found' || /^\d+$/.test(key)) throw error
     const species = await fetchJson<ApiSpecies>(`pokemon-species/${key}`, signal)
     const variety = species.varieties.find((v) => v.is_default) ?? species.varieties[0]
@@ -140,7 +135,7 @@ export async function fetchRotomPokemon(idOrName: string | number, signal?: Abor
     if (detail) levelUp.set(entry.move.name, detail.level_learned_at)
   }
 
-  // The species' proper name ("Mr. Mime"), and from it the name of each of its forms ("Galarian Mr. Mime").
+  // Species name and the name of each form
   const speciesName = english(species.names)?.name ?? pokemonLabel(species.name)
   const forms: RotomForm[] = species.varieties
     .map((variety) => ({ id: idFromUrl(variety.pokemon.url), slug: variety.pokemon.name, ...(variety.is_default ? { name: speciesName, kind: null } : nameForm(variety.pokemon.name, species.name, speciesName)), ordinary: variety.is_default }))
@@ -176,13 +171,7 @@ export async function fetchRotomPokemon(idOrName: string | number, signal?: Abor
   }
 }
 
-/**
- * The Rotom Dex's Pokémon lookup. Pass an id or a name; pass null (or an empty
- * string) for "nothing requested", which leaves the query idle.
- *
- * Retries are off on purpose: a mistyped name should reach the error state at
- * once, not after three slow attempts.
- */
+/** Pokémon lookup by id or name, null stays idle. No retries so typos fail fast */
 export function useRotomApi(idOrName: string | number | null) {
   const key = idOrName === null ? '' : String(idOrName).trim().toLowerCase()
   return useQuery<RotomPokemon, RotomApiError>({
@@ -196,7 +185,7 @@ export function useRotomApi(idOrName: string | number | null) {
   })
 }
 
-// ------------------------------------------------------------ evolution family
+// Evolution family
 
 interface ApiChainLink {
   species: NamedResource
@@ -209,7 +198,7 @@ export interface EvolutionStage {
   name: string
 }
 
-/** Every species in an evolution family, base stage first (branches are flattened in order). */
+/** Species in an evolution family, base first, branches flattened */
 export function useEvolutionFamily(url: string | null | undefined) {
   return useQuery<EvolutionStage[], RotomApiError>({
     queryKey: ['evolution-chain', url],

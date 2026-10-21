@@ -1,8 +1,4 @@
-// Bakes Rotom's procedural body (src/lib/rotomGeometry.ts) into
-// public/assets/rotom_device.glb as named, Draco-compressed meshes.
-//
-// Run with `npm run rotom`. Node runs this TypeScript file directly (type
-// stripping), so it shares the exact geometry code the app falls back to.
+// Bakes the procedural Rotom body into a Draco compressed GLB. Run with npm run rotom
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -14,8 +10,7 @@ import { buildRotomGeometries, ROTOM_PART_PIVOT, ROTOM_PARTS, type RotomPart } f
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
-// Reference materials so the file looks right in any glTF viewer. The app
-// replaces them with cel-shaded ones (see RotomModel.tsx).
+// Placeholder materials, the app swaps in cel shaded ones
 const MATERIALS = {
   red: { color: [0.72, 0.06, 0.06], emissive: [0, 0, 0] },
   redDeep: { color: [0.5, 0.03, 0.04], emissive: [0, 0, 0] },
@@ -80,7 +75,7 @@ for (const name of ROTOM_PARTS) {
   if (uv) {
     primitive.setAttribute('TEXCOORD_0', doc.createAccessor().setType('VEC2').setArray(new Float32Array(uv.array)).setBuffer(buffer))
   }
-  // The spike carries a red-to-magenta gradient in its vertex colours.
+  // Spike gradient lives in the vertex colours
   const color = geometry.getAttribute('color')
   if (color) {
     primitive.setAttribute('COLOR_0', doc.createAccessor().setType('VEC3').setArray(new Float32Array(color.array)).setBuffer(buffer))

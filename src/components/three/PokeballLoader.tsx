@@ -3,7 +3,7 @@ import { useRef } from 'react'
 import { BackSide, type Group } from 'three'
 import { toonGradient } from '../../lib/toon'
 
-/** A spinning, hopping cel-shaded Poké Ball shown while Rotom's model and face load. */
+/** Spinning Poké Ball shown while the model loads */
 export function PokeballLoader() {
   const ball = useRef<Group>(null)
   useFrame((state, delta) => {
@@ -35,7 +35,7 @@ export function PokeballLoader() {
         <cylinderGeometry args={[0.17, 0.17, 0.1, 28]} />
         <meshToonMaterial color="#f6f7fb" gradientMap={toonGradient} />
       </mesh>
-      {/* Ink outline: a slightly larger shell seen from the inside. */}
+      {/* Ink outline, a larger shell seen from inside */}
       <mesh scale={1.06}>
         <sphereGeometry args={[1, 32, 16]} />
         <meshBasicMaterial color="#070b24" side={BackSide} />

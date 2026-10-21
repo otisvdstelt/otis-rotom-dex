@@ -4,15 +4,11 @@ import { Row } from './ScreenList'
 
 interface ScreenSearchProps {
   search: HudState['search']
-  /** What was typed. */
   query: string
   onPick: (link: EntryLink) => void
 }
 
-/**
- * Results from every databank at once, shown while something is typed in the
- * search field. Each row says which databank it comes from.
- */
+/** Search results from every databank, each row shows its databank */
 export function ScreenSearch({ search, query, onPick }: ScreenSearchProps) {
   if (search.hits.length === 0) {
     return (
@@ -26,7 +22,7 @@ export function ScreenSearch({ search, query, onPick }: ScreenSearchProps) {
     <>
       <ul>
         {search.hits.map((hit) => (
-          // The number is only shown for Pokémon: other databanks' numbers mean little side by side.
+          // Only Pokémon show a number
           <Row key={`${hit.section}/${hit.item.key}`} item={{ ...hit.item, number: hit.section === 'pokemon' ? hit.item.number : undefined, hint: hit.kind }} onPick={() => onPick({ section: hit.section, key: hit.item.key })} />
         ))}
       </ul>

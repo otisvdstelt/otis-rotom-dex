@@ -1,9 +1,6 @@
 import { Power } from 'lucide-react'
 
-/**
- * Rotom's screen while it sleeps: the dull grey-green of the unresponsive
- * Pokédex in the games, a snore drifting up it, and the way to wake it.
- */
+/** Sleeping screen with a snore and the wake key */
 export function ScreenSleep({ onWake, hint }: { onWake: () => void; hint: string }) {
   return (
     <button type="button" onClick={onWake} className="dex-off group relative flex size-full flex-col items-center justify-center gap-[0.7em] border-0 text-[#e9f3ee]">
@@ -24,7 +21,7 @@ export function ScreenSleep({ onWake, hint }: { onWake: () => void; hint: string
 
 const BOOT_LINES = ['Rotom entering Pokédex', 'Charging voice box', 'Linking databanks']
 
-/** The start-up screen: static, a short checklist, and a bar filling as Rotom settles in. */
+/** Startup screen with static, a checklist and a loading bar */
 export function ScreenBoot() {
   return (
     <div className="dex-off dex-static flex size-full flex-col items-center justify-center gap-[0.5em] text-[#e9f3ee]" role="status">

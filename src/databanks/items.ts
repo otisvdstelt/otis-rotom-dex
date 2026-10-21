@@ -3,7 +3,7 @@ import { isTypeName, pokemonLabel } from '../lib/types'
 import { BallIcon, BerryIcon, ItemIcon, SnackIcon } from './icons'
 import type { Databank, DexEntry, EntryGroup, IndexItem, SectionId } from './types'
 
-// ------------------------------------------------------------ PokeAPI payloads
+// PokeAPI payloads
 
 interface ApiItem {
   id: number
@@ -38,7 +38,7 @@ interface ApiBerry {
   natural_gift_type: NamedResource
 }
 
-// ------------------------------------------------------------ shared item handling
+// Shared item handling
 
 const itemLabel = (slug: string) => titleCase(slug).replace(/\bTm(\d+)/, 'TM$1').replace(/\bHm(\d+)/, 'HM$1')
 
@@ -101,7 +101,7 @@ async function categoryIndex(categories: [slug: string, hint: string][], signal?
   return lists.flatMap((list, i) => list.items.map((item) => toIndexItem(item, categories[i][1])))
 }
 
-// ------------------------------------------------------------ Items (everything)
+// Items
 
 export const itemsDatabank: Databank = {
   id: 'items',
@@ -117,7 +117,7 @@ export const itemsDatabank: Databank = {
   loadEntry: loadItem('items'),
 }
 
-// ------------------------------------------------------------ Poké Balls
+// Poké Balls
 
 export const ballsDatabank: Databank = {
   id: 'balls',
@@ -141,10 +141,9 @@ export const ballsDatabank: Databank = {
   loadEntry: loadItem('balls'),
 }
 
-// ------------------------------------------------------------ Snacks and treats
+// Snacks
 
-// Famous regional sweets and drinks. PokeAPI files them under several unrelated
-// categories, so they are listed by hand; names it does not know are skipped.
+// Regional sweets listed by hand, unknown names are skipped
 const TREATS = [
   'lava-cookie',
   'old-gateau',
@@ -180,7 +179,6 @@ export const treatsDatabank: Databank = {
   label: 'Snacks',
   singular: 'snack',
   blurb: 'Regional sweets, drinks, curry and sandwich fillings',
-  // A Casteliacone, Unova's famous ice cream.
   art: [itemArtwork('casteliacone')],
   icon: SnackIcon,
   hue: '#f6a13a',
@@ -207,16 +205,16 @@ export const treatsDatabank: Databank = {
   loadEntry: loadItem('treats'),
 }
 
-// ------------------------------------------------------------ Berries
+// Berries
 
 const FLAVORS = ['spicy', 'dry', 'sweet', 'bitter', 'sour'] as const
-/** The strongest single flavour any Berry has. */
+/** Strongest flavour any Berry has */
 const FLAVOR_CEILING = 40
 
 function berryToEntry(berry: ApiBerry, item: ApiItem): DexEntry {
   const name = english(item.names)?.name ?? `${titleCase(berry.name)} Berry`
   const potency = new Map(berry.flavors.map((entry) => [entry.flavor.name, entry.potency]))
-  // One flavour clearly on top names the Berry's taste; a tie makes it "mixed".
+  // One top flavour names the taste, a tie means mixed
   const ranked = [...berry.flavors].sort((a, b) => b.potency - a.potency)
   const taste = !ranked[0] || ranked[0].potency === 0 ? 'mild' : ranked[1] && ranked[1].potency === ranked[0].potency ? 'mixed-flavour' : ranked[0].flavor.name
   const firmness = berry.firmness.name.replace(/-/g, ' ')
@@ -271,7 +269,7 @@ export const berriesDatabank: Databank = {
       image: itemSprite(`${berry.name}-berry`),
     })),
   loadEntry: async (key, signal) => {
-    // People say "oran berry"; PokeAPI files it under "oran".
+    // PokeAPI drops the word berry from the name
     const berry = await fetchJson<ApiBerry>(`berry/${key.replace(/-berry$/, '')}`, signal)
     const item = await fetchJson<ApiItem>(berry.item.url, signal)
     return berryToEntry(berry, item)

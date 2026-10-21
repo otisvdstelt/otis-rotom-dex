@@ -5,7 +5,7 @@ import { slugify, type RotomApiError } from '../lib/pokeapi'
 
 export const indexQueryKey = (section: SectionId) => ['databank-index', section] as const
 
-/** The full list of entries in a databank. Fetched once per visit and kept. */
+/** Full databank list, fetched once per visit */
 export function useDatabankIndex(section: SectionId | null) {
   return useQuery<IndexItem[], RotomApiError>({
     queryKey: section ? indexQueryKey(section) : ['databank-index', 'none'],
@@ -18,10 +18,7 @@ export function useDatabankIndex(section: SectionId | null) {
   })
 }
 
-/**
- * One entry from any databank other than Pokémon (which has its own hook,
- * useRotomApi). Like that hook it never retries, so a bad name fails at once.
- */
+/** One entry from any databank except Pokémon, never retries */
 export function useDatabankEntry(section: SectionId | null, key: string | null) {
   return useQuery<DexEntry, RotomApiError>({
     queryKey: ['databank-entry', section, key],
@@ -34,12 +31,7 @@ export function useDatabankEntry(section: SectionId | null, key: string | null) 
   })
 }
 
-/**
- * Turns what someone typed into the key to look up. A number picks the entry
- * with that number; text matches a key or label exactly, then by how it
- * starts. With no match the cleaned-up text is tried as-is, so the API has the
- * final say on whether it exists.
- */
+/** Turns typed text into a lookup key, by number, exact name or prefix */
 export function resolveQuery(raw: string, index: IndexItem[] | undefined): string | null {
   const slug = slugify(raw)
   if (!slug) return null
@@ -56,7 +48,7 @@ export function resolveQuery(raw: string, index: IndexItem[] | undefined): strin
   return beginning?.key ?? slug
 }
 
-/** Entries whose names are closest to a failed search, for "did you mean". */
+/** Closest names to a failed search, for did you mean */
 export function nearestMatches(raw: string, index: IndexItem[] | undefined, limit = 3): IndexItem[] {
   const wanted = slugify(raw)
   if (!index || wanted.length < 2 || /^\d+$/.test(wanted)) return []
@@ -83,20 +75,15 @@ export function nearestMatches(raw: string, index: IndexItem[] | undefined, limi
     .map(({ item }) => item)
 }
 
-/** One result of a search across every databank. */
+/** One cross databank search result */
 export interface SearchHit {
   section: SectionId
   item: IndexItem
-  /** What kind of thing it is, for the row's tag: "Pokémon", "Berry", "Move". */
+  /** Row tag, like Pokémon, Berry or Move */
   kind: string
 }
 
-/**
- * Searches every databank's list for what was typed. Exact names come first,
- * then names that start with it, then names with a word that starts with it,
- * then anything containing it; ties go to the databank listed first. A number
- * finds the Pokémon with that number.
- */
+/** Searches every databank, exact names first, then prefixes, then contains */
 export function searchAll(raw: string, lists: { section: SectionId; items: IndexItem[] | undefined }[], limit: number): { hits: SearchHit[]; more: number } {
   const wanted = slugify(raw)
   if (!wanted) return { hits: [], more: 0 }
@@ -130,11 +117,7 @@ const everyList = (results: { data: IndexItem[] | undefined; isPending: boolean 
   loading: results.some((result) => result.isPending),
 })
 
-/**
- * Every databank's list, for searching them all at once. They are fetched in
- * the background once `enabled` (that is, once Rotom is awake) and shared
- * with useDatabankIndex, so opening a databank afterwards costs nothing.
- */
+/** Every databank list, fetched in the background once Rotom is awake */
 export function useEveryIndex(enabled: boolean) {
   return useQueries({
     queries: DATABANK_LIST.map((databank) => ({

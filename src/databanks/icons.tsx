@@ -1,6 +1,4 @@
-// The databanks' menu icons: small flat drawings of things from the Pokémon
-// world, inked like everything else on Rotom's screen. Each is drawn on a
-// 32 x 32 grid.
+// Databank menu icons on a 32 grid
 import type { ReactNode } from 'react'
 
 export type DatabankIcon = (props: { className?: string }) => ReactNode
@@ -16,7 +14,7 @@ function Drawing({ className, children }: { className?: string; children: ReactN
   )
 }
 
-/** Pokémon: Pikachu's face. */
+/** Pikachu face */
 export const PokemonIcon: DatabankIcon = ({ className }) => (
   <Drawing className={className}>
     <path d="M9.5 13.5 L5 2.5 L14 9.5 Z" fill="#ffd83d" />
@@ -32,7 +30,7 @@ export const PokemonIcon: DatabankIcon = ({ className }) => (
   </Drawing>
 )
 
-/** Berries: an Oran Berry. */
+/** Oran Berry */
 export const BerryIcon: DatabankIcon = ({ className }) => (
   <Drawing className={className}>
     <path d="M16 10 Q15.5 6 18 3.5" />
@@ -45,7 +43,7 @@ export const BerryIcon: DatabankIcon = ({ className }) => (
   </Drawing>
 )
 
-/** Snacks: a Rare Candy in its wrapper. */
+/** Rare Candy */
 export const SnackIcon: DatabankIcon = ({ className }) => (
   <Drawing className={className}>
     <g transform="rotate(-28 16 16)">
@@ -57,7 +55,7 @@ export const SnackIcon: DatabankIcon = ({ className }) => (
   </Drawing>
 )
 
-/** Items: a Potion. */
+/** Potion */
 export const ItemIcon: DatabankIcon = ({ className }) => (
   <Drawing className={className}>
     <path d="M13 9 V5.5 H19.5 L24.5 4 V8 L19.5 7.5" fill="#e6e9f5" />
@@ -68,7 +66,7 @@ export const ItemIcon: DatabankIcon = ({ className }) => (
   </Drawing>
 )
 
-/** Poké Balls: a Poké Ball. */
+/** Poké Ball */
 export const BallIcon: DatabankIcon = ({ className }) => (
   <Drawing className={className}>
     <circle cx="16" cy="16" r="12.5" fill="#ffffff" />
@@ -79,7 +77,7 @@ export const BallIcon: DatabankIcon = ({ className }) => (
   </Drawing>
 )
 
-/** Moves: a Technical Machine disc. */
+/** TM disc */
 export const MoveIcon: DatabankIcon = ({ className }) => (
   <Drawing className={className}>
     <circle cx="16" cy="16" r="12.5" fill="#ffc83d" />
@@ -90,7 +88,7 @@ export const MoveIcon: DatabankIcon = ({ className }) => (
   </Drawing>
 )
 
-/** Abilities: an Ability Capsule. */
+/** Ability Capsule */
 export const AbilityIcon: DatabankIcon = ({ className }) => (
   <Drawing className={className}>
     <g transform="rotate(-38 15 18)">
@@ -102,7 +100,7 @@ export const AbilityIcon: DatabankIcon = ({ className }) => (
   </Drawing>
 )
 
-/** Types: fire, water and grass, the first three every trainer learns. */
+/** Fire, water and grass */
 export const TypeIcon: DatabankIcon = ({ className }) => (
   <Drawing className={className}>
     <path d="M16 16 L16 3.5 A12.5 12.5 0 0 1 26.83 22.25 Z" fill="#f0672f" />
@@ -112,7 +110,7 @@ export const TypeIcon: DatabankIcon = ({ className }) => (
   </Drawing>
 )
 
-/** Regions and badges: a Town Map with a route marked on it. */
+/** Town Map */
 export const RegionIcon: DatabankIcon = ({ className }) => (
   <Drawing className={className}>
     <path d="M3.5 8.5 L11.5 5 L20.5 8.5 L28.5 5 V23.5 L20.5 27 L11.5 23.5 L3.5 27 Z" fill="#f7e9b8" />
@@ -122,7 +120,7 @@ export const RegionIcon: DatabankIcon = ({ className }) => (
   </Drawing>
 )
 
-/** Natures: a sprig of mint, the herb that changes one. */
+/** Mint sprig */
 export const NatureIcon: DatabankIcon = ({ className }) => (
   <Drawing className={className}>
     <path d="M16 29 V13" />

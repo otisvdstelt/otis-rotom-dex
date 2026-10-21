@@ -1,7 +1,6 @@
 import { TYPE_COLORS, type TypeName } from '../../lib/types'
 
-// Eight cut-gem silhouettes, one per badge in a set, so a badge case reads as
-// eight different badges and not eight copies. Drawn on a 40x40 grid.
+// Eight gem shapes so each badge in a set looks different, on a 40 grid
 const SHAPES = [
   'M20 3 L35 12 V28 L20 37 L5 28 V12 Z', // hexagon
   'M20 2 L37 20 L20 38 L3 20 Z', // diamond
@@ -15,21 +14,18 @@ const SHAPES = [
 
 interface BadgeEmblemProps {
   type: TypeName
-  /** Position in the set; picks the silhouette. */
+  /** Position in the set, picks the shape */
   index: number
 }
 
-/**
- * A stand-in emblem for a gym badge: a cut gem in the gym's type colour.
- * (The real badge artwork is not available from PokeAPI.)
- */
+/** Stand in gym badge gem in the type colour */
 export function BadgeEmblem({ type, index }: BadgeEmblemProps) {
   const shape = SHAPES[index % SHAPES.length]
   return (
     <svg viewBox="0 0 40 40" className="size-10 shrink-0" aria-hidden="true">
       <path d={shape} fill="#060e33" transform="translate(0 2.5)" />
       <path d={shape} fill={TYPE_COLORS[type]} stroke="#060e33" strokeWidth="2.5" strokeLinejoin="round" />
-      {/* One facet catching the light. */}
+      {/* Light facet */}
       <path d={shape} fill="#ffffff" opacity="0.38" transform="translate(11 9) scale(0.3)" />
     </svg>
   )

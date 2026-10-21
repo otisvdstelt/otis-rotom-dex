@@ -6,34 +6,31 @@ import type { RotomPower } from '../../lib/expression'
 import type { Shot } from '../../lib/framing'
 import type { RotomApiError } from '../../lib/pokeapi'
 
-/**
- * What Rotom's screen is showing: its own face, the menu of databanks, the
- * list of one databank, search results from all of them, or a single entry.
- */
+/** What the screen shows, face, menu, list, search or entry */
 export type ScreenView = 'face' | 'menu' | 'list' | 'search' | 'entry'
 
-/** Everything the interface shows. App owns it; the HUD and Rotom's screen only render it. */
+/** Full UI state, owned by App */
 export interface HudState {
   emotion: RotomEmotion
-  /** Asleep (as on every fresh visit), starting up, or awake. */
+  /** Asleep, starting up or awake */
   power: RotomPower
-  /** Which body Rotom is in: the 3D Rotom Dex, or the phone-shaped one that fills a phone's display. */
+  /** 3D Dex or phone form */
   form: 'dex' | 'phone'
-  /** False on a phone, where only the phone form fits. */
+  /** False on a phone */
   canSwitchForm: boolean
   view: ScreenView
   shot: Shot
-  /** The open databank, or null before one has been chosen. */
+  /** Open databank, null before one is chosen */
   section: SectionId | null
-  /** The databank searches go to: the open one, or Pokémon otherwise. */
+  /** Search target, the open databank or Pokémon */
   activeSection: SectionId
-  /** Text in the search field. */
+  /** Search field text */
   input: string
-  /** What was asked for in the lookup now running, shown or failed. */
+  /** Current lookup query */
   asked: string
   entry: DexEntry | undefined
   error: RotomApiError | null
-  /** Close matches for a failed search. */
+  /** Close matches for a failed search */
   suggestions: IndexItem[]
   index: {
     items: IndexItem[] | undefined
@@ -41,38 +38,38 @@ export interface HudState {
     failed: boolean
     retry: () => void
   }
-  /** What the typed text matches across every databank. */
+  /** Cross databank matches for the typed text */
   search: { hits: SearchHit[]; more: number; loading: boolean }
-  /** Rotom's current line. */
+  /** Current line */
   line: string
   voice: RotomVoice
 }
 
-/** Everything the interface can ask for. */
+/** Every UI action */
 export interface HudActions {
   setInput: (value: string) => void
-  /** Look up whatever is in the search field. */
+  /** Look up the search text */
   submit: () => void
   prev: () => void
   next: () => void
   random: () => void
-  /** Scan one specific entry, possibly in another databank. */
+  /** Scan a specific entry */
   open: (link: EntryLink) => void
   openSection: (section: SectionId) => void
-  /** Show the menu of databanks on Rotom's screen. */
+  /** Show the databank menu */
   openMenu: () => void
-  /** Step back one level: entry -> list -> menu -> Rotom's face. */
+  /** Go back one level */
   back: () => void
-  /** Say the current report again. */
+  /** Repeat the report */
   replay: () => void
-  /** Switch between seeing all of Rotom and reading its screen up close. */
+  /** Toggle wide and close view */
   toggleShot: () => void
-  /** Switch Rotom on. */
+  /** Wake Rotom */
   wake: () => void
-  /** Put Rotom back to sleep. */
+  /** Sleep */
   sleep: () => void
-  /** Rotom was tapped: asleep it wakes, awake it reacts. */
+  /** Tap, wakes or reacts */
   poke: () => void
-  /** Swap between the Rotom Dex and the Rotom Phone form. */
+  /** Toggle Dex and phone form */
   switchForm: () => void
 }

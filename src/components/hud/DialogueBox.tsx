@@ -5,19 +5,19 @@ import { useTypewriter } from '../../hooks/useLayout'
 import { MAX_VOLUME, type RotomVoice } from '../../hooks/useRotomVoice'
 
 interface DialogueBoxProps {
-  /** Rotom's current line. A leading "BZZZT!" is set in its own lettering. */
+  /** Current line, a leading BZZZT gets its own lettering */
   text: string
   voice: RotomVoice
-  /** Offered only when there is a report worth hearing again. */
+  /** Shown only when there is a report to replay */
   onReplay?: () => void
-  /** Close matches for a failed search, offered as replies. */
+  /** Close matches offered as replies */
   suggestions?: IndexItem[]
   onSuggestion?: (item: IndexItem) => void
 }
 
 const BUZZ = /^(BZZ+T[!?]*)\s*/i
 
-/** The bolt the games pin to Rotom's text box. */
+/** Text box bolt */
 function Bolt({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 18 24" className={className} aria-hidden="true">
@@ -26,7 +26,7 @@ function Bolt({ className }: { className: string }) {
   )
 }
 
-/** The arrow from the games' text box: down puts the box away, up brings it back. */
+/** Arrow that hides or shows the box */
 function Arrow({ up = false, bobbing }: { up?: boolean; bobbing: boolean }) {
   return (
     <span className={`block text-[#f2a900] ${bobbing ? 'animate-[nudge_0.9s_ease-in-out_infinite]' : ''}`}>
@@ -37,32 +37,25 @@ function Arrow({ up = false, bobbing }: { up?: boolean; bobbing: boolean }) {
   )
 }
 
-/**
- * Rotom's words, in the text box the games use for dialogue. The line types
- * itself out as Rotom speaks; tap the box to show the rest at once. The box
- * keeps one size, as in the games: a long line rolls upward as it is written
- * and can be scrolled back afterwards. The arrow at its corner puts the box
- * away, leaving a small tab in the same corner that brings it back.
- */
+/** Rotom text box. Types out as Rotom speaks, tap to finish, scrolls long lines, hides to a tab */
 export function DialogueBox({ text, voice, onReplay, suggestions = [], onSuggestion }: DialogueBoxProps) {
   const { shown, done, skip } = useTypewriter(text)
   const buzz = text.match(BUZZ)?.[1] ?? ''
   const buzzShown = shown.slice(0, buzz.length)
   const restShown = shown.slice(buzz.length)
 
-  // Put away, the box remembers the line it was closed on, so the tab can
-  // show when Rotom has said something since.
+  // Remember the line it was closed on, so the tab can flag new ones
   const [closedOn, setClosedOn] = useState<string | null>(null)
   const closed = closedOn !== null
   const unheard = closed && closedOn !== text
 
-  // Keep the newest words in view while the line is being written.
+  // Keep the newest words in view
   const words = useRef<HTMLParagraphElement>(null)
   useEffect(() => {
     if (words.current) words.current.scrollTop = words.current.scrollHeight
   }, [shown, closed])
 
-  // Screen readers get the whole line once, not letter by letter, whether the box is open or not.
+  // Screen readers get the full line once
   const spoken = (
     <p className="sr-only" role="status" aria-live="polite">
       {text}
@@ -130,7 +123,7 @@ export function DialogueBox({ text, voice, onReplay, suggestions = [], onSuggest
             Say again
           </button>
         )}
-        {/* How loud Rotom talks: up to twice the level its lines were recorded at. */}
+        {/* Volume, up to twice the recorded level */}
         <input
           type="range"
           min={0}
@@ -156,7 +149,7 @@ export function DialogueBox({ text, voice, onReplay, suggestions = [], onSuggest
         >
           {voice.muted || voice.volume === 0 ? <VolumeX size={17} strokeWidth={2.8} /> : voice.volume < 0.6 ? <Volume1 size={17} strokeWidth={2.8} /> : <Volume2 size={17} strokeWidth={2.8} />}
         </button>
-        {/* The "more" arrow from the games. It bobs once the line is complete, and puts the box away. */}
+        {/* More arrow, bobs when done and hides the box */}
         <button
           type="button"
           onClick={() => setClosedOn(text)}

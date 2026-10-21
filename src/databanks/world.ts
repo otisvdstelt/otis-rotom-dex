@@ -1,11 +1,11 @@
-// The wider world: regions (with their gym badges) and natures.
+// Regions and natures
 import { badgeSprite, exclaim, fetchJson, generationLabel, itemArtwork, itemSprite, listWords, titleCase, type NamedResource, type PagedList } from '../lib/pokeapi'
 import { pokemonLabel, STAT_LABELS } from '../lib/types'
 import { REGION_LORE } from './data/regions'
 import { NatureIcon, RegionIcon } from './icons'
 import type { Databank, DexEntry, EntryGroup } from './types'
 
-// ------------------------------------------------------------ Regions
+// Regions
 
 interface ApiRegion {
   id: number
@@ -46,7 +46,7 @@ const GAME_NAMES: Record<string, string> = {
   xd: 'XD: Gale of Darkness',
 }
 
-// Japanese first-print versions repeat the international ones.
+// Japanese first prints repeat the international ones
 const gameName = (slug: string): string | null => (slug.endsWith('-japan') ? null : (GAME_NAMES[slug] ?? titleCase(slug)))
 
 function regionToEntry(region: ApiRegion): DexEntry {
@@ -125,7 +125,6 @@ export const regionsDatabank: Databank = {
   label: 'Regions & badges',
   singular: 'region',
   blurb: 'Every region, its gyms, badges and partners',
-  // The Boulder Badge, the first badge of the first region.
   art: [badgeSprite(1)],
   icon: RegionIcon,
   hue: '#2fb5d6',
@@ -143,7 +142,7 @@ export const regionsDatabank: Databank = {
   loadEntry: async (key, signal) => regionToEntry(await fetchJson<ApiRegion>(`region/${key.replace(/-region$/, '')}`, signal)),
 }
 
-// ------------------------------------------------------------ Natures
+// Natures
 
 interface ApiNature {
   id: number
@@ -166,7 +165,7 @@ async function natureToEntry(nature: ApiNature, signal?: AbortSignal): Promise<D
   const likes = nature.likes_flavor?.name ?? null
   const hates = nature.hates_flavor?.name ?? null
 
-  // Berries whose strongest flavour is the one this nature loves.
+  // Berries with the flavour this nature loves
   const groups: EntryGroup[] = []
   if (likes && !neutral) {
     const flavor = await fetchJson<ApiBerryFlavor>(`berry-flavor/${likes}`, signal)
@@ -178,7 +177,7 @@ async function natureToEntry(nature: ApiNature, signal?: AbortSignal): Promise<D
     })
   }
 
-  // Spoken aloud, so stats are named in full ("Special Attack", not "Sp. Atk").
+  // Stats named in full because they are spoken aloud
   const summary = neutral
     ? `A ${name} nature leaves every stat as it is, and such a Pokémon has no favourite flavour.`
     : `A ${name} nature raises ${titleCase(nature.increased_stat!.name)} and lowers ${titleCase(nature.decreased_stat!.name)}. Pokémon with it like ${likes} food and dislike ${hates} food.`
@@ -209,7 +208,6 @@ export const naturesDatabank: Databank = {
   label: 'Natures',
   singular: 'nature',
   blurb: 'The 25 temperaments and the stats they shift',
-  // A Mental Herb.
   art: [itemArtwork('mental-herb')],
   icon: NatureIcon,
   hue: '#b06cf0',

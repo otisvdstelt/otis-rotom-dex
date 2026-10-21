@@ -1,9 +1,9 @@
-// Thin, typed access to PokeAPI plus the text clean-up every databank needs.
+// Typed PokeAPI access and text cleanup
 
 export const API = 'https://pokeapi.co/api/v2'
 const SPRITES = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites'
 
-/** Why a lookup failed, so Rotom can say something useful about it. */
+/** Why a lookup failed */
 export type RotomApiErrorKind = 'not-found' | 'network'
 
 export class RotomApiError extends Error {
@@ -16,7 +16,7 @@ export class RotomApiError extends Error {
   }
 }
 
-/** GETs JSON from PokeAPI (a path like "pokemon/25" or a full resource URL). */
+/** Fetches JSON from a PokeAPI path or URL */
 export async function fetchJson<T>(pathOrUrl: string, signal?: AbortSignal): Promise<T> {
   const url = pathOrUrl.startsWith('http') ? pathOrUrl : `${API}/${pathOrUrl}`
   let response: Response
@@ -31,7 +31,7 @@ export async function fetchJson<T>(pathOrUrl: string, signal?: AbortSignal): Pro
   return response.json() as Promise<T>
 }
 
-// ------------------------------------------------------------ shared API shapes
+// Shared API shapes
 
 export interface NamedResource {
   name: string
@@ -47,9 +47,9 @@ export interface PagedList {
   results: NamedResource[]
 }
 
-// ------------------------------------------------------------ text
+// Text
 
-/** PokeAPI text carries form feeds, hard line breaks and soft hyphens from the cartridges. */
+/** Strips cartridge line breaks and soft hyphens */
 export const cleanText = (value: string): string =>
   value
     .replace(/­\s*/g, '')
@@ -58,7 +58,7 @@ export const cleanText = (value: string): string =>
     .replace(/POKéMON/g, 'Pokémon')
     .trim()
 
-/** "special-attack" -> "Special Attack" */
+/** Slug to title case */
 export const titleCase = (value: string): string =>
   value
     .split(/[-\s]+/)
@@ -66,7 +66,7 @@ export const titleCase = (value: string): string =>
     .map((word) => word[0].toUpperCase() + word.slice(1))
     .join(' ')
 
-/** What a user types -> the slug PokeAPI uses: "Mr. Mime" -> "mr-mime", "#025" -> "25". */
+/** User input to a PokeAPI slug */
 export function slugify(value: string): string {
   return value
     .trim()
@@ -82,43 +82,43 @@ export function slugify(value: string): string {
     .replace(/^-|-$/g, '')
 }
 
-/** The English entry from a localized list, preferring the most recent one. */
+/** Latest English entry from a localized list */
 export function english<T extends Localized>(entries: T[] | undefined): T | undefined {
   return entries?.findLast((entry) => entry.language.name === 'en')
 }
 
-/** Trailing numeric id of a resource URL. */
+/** Trailing id of a resource URL */
 export const idFromUrl = (url: string): number => Number(url.replace(/\/$/, '').split('/').pop())
 
-/** "generation-iv" -> "Generation IV" */
+/** Generation slug to display name */
 export const generationLabel = (name: string | undefined): string => {
   if (!name) return 'Unknown'
   const numeral = name.split('-').pop() ?? ''
   return `Generation ${numeral.toUpperCase()}`
 }
 
-/** "a" or "an", by sound, for the word that follows. */
+/** a or an for the next word */
 export const article = (word: string): string => (/^[aeiou]/i.test(word) ? 'An' : 'A')
 
-/** ["a","b","c"] -> "a, b and c" */
+/** Joins a list with commas and and */
 export function listWords(words: string[]): string {
   if (words.length <= 1) return words.join('')
   return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
 }
 
-/** Ends a sentence with exactly one "!", whatever punctuation it came with. */
+/** Ends a sentence with one exclamation mark */
 export const exclaim = (sentence: string): string => `${sentence.replace(/[.!?\s]+$/, '')}!`
 
-// ------------------------------------------------------------ images (all served by PokeAPI's sprite repository)
+// Images from the PokeAPI sprite repo
 
 export const pokemonSprite = (id: number): string => `${SPRITES}/pokemon/${id}.png`
 export const pokemonArtwork = (id: number): string => `${SPRITES}/pokemon/other/official-artwork/${id}.png`
 export const itemSprite = (slug: string): string => `${SPRITES}/items/${slug}.png`
-/** The games' illustrated artwork of an item (from Pokémon Dream World; it covers items up to the fifth generation). */
+/** Item Dream World artwork, up to gen five */
 export const itemArtwork = (slug: string): string => `${SPRITES}/items/dream-world/${slug}.png`
-/** A Pokémon's Dream World illustration (first five generations). */
+/** Pokémon Dream World artwork, first five gens */
 export const pokemonIllustration = (id: number): string => `${SPRITES}/pokemon/other/dream-world/${id}.svg`
-/** Gym badge artwork, numbered in the order the games award them (1 = Boulder Badge). */
+/** Gym badge artwork in award order */
 export const badgeSprite = (number: number): string => `${SPRITES}/badges/${number}.png`
-/** The games' own type label. The Sun and Moon drawings are only 48 pixels wide, so the sharper Scarlet and Violet set is used. */
+/** Type label art, Scarlet and Violet set for sharpness */
 export const typeIcon = (typeId: number): string => `${SPRITES}/types/generation-ix/scarlet-violet/${typeId}.png`

@@ -18,35 +18,34 @@ import { errorLine, GREETING, listLine, MENU_LINE, QUIPS, scanOpener } from './l
 import { titleCase } from './lib/pokeapi'
 import { sfx } from './lib/sfx'
 
-// three.js is most of the download; the HUD paints first and Rotom follows.
-// A phone never loads it at all: there, the phone itself is Rotom.
+// Lazy load three.js so the HUD paints first, phones never load it
 const RotomCanvas = lazy(() => import('./components/RotomCanvas'))
 
-/** Rotom always takes at least this long to "compute", even when the answer is already cached. */
+/** Minimum scan time, even when cached */
 const MIN_SCAN_MS = 850
-/** How long after a result arrives Rotom shows it: time for the lunge and spin to finish. */
+/** Delay before showing a result, lets the spin finish */
 const REVEAL_MS = 950
-/** The phone form has no spin to wait out: just its little jump. */
+/** Phone form delay, just the jump */
 const PHONE_REVEAL_MS = 380
-/** How long Rotom takes to start up once it is switched on. */
+/** Startup duration */
 const WAKE_MS = 1900
-/** How long Rotom's face shows between one screen and the next. */
+/** How long the face flashes between screens */
 const SWITCH_MS = 460
 
-/** How many results a search across every databank shows at once. */
+/** Max cross databank search results */
 const SEARCH_LIMIT = 60
 
-/** Keys that scroll Rotom's screen, and by how many screenfuls (infinite: all the way). */
+/** Scroll keys and how many screens they move, Infinity means all the way */
 const SCROLL_KEYS: Record<string, number> = { ArrowDown: 0.25, ArrowUp: -0.25, PageDown: 0.9, PageUp: -0.9, End: Infinity, Home: -Infinity }
 
 interface Route {
   section: SectionId | null
   key: string | null
-  /** True when the databank menu is open with no databank chosen yet. */
+  /** True when the menu is open with no databank chosen */
   menu: boolean
 }
 
-/** "#/berries/cheri" -> the Cheri Berry entry; "#/menu" -> the databank menu. */
+/** Parses the hash route into an entry or the menu */
 function readRoute(): Route {
   const [section, key] = window.location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent)
   if (section === 'menu') return { section: null, key: null, menu: true }
@@ -61,36 +60,35 @@ export default function App() {
   const voice = useRotomVoice()
   const { say, stop } = voice
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
-  // On a phone, Rotom takes its phone form: the whole display is its body.
-  // On a bigger screen that form is a choice (or "?form=phone" in the address).
+  // Phones use the phone form, bigger screens can pick it or use form phone in the URL
   const narrow = useMediaQuery('(max-width: 639px)')
   const [phoneChosen, setPhoneChosen] = useState(() => new URLSearchParams(window.location.search).get('form') === 'phone')
   const phone = narrow || phoneChosen
 
-  // ---------------------------------------------------------- what is being looked at
+  // Lookup state
 
   const [route, setRoute] = useState<Route>(readRoute)
-  /** Text in the search field. */
+  /** Search field text */
   const [input, setInput] = useState('')
-  /** How the current lookup was asked for, in the user's own words. */
+  /** Current query as the user typed it */
   const [asked, setAsked] = useState(() => (route.key ? titleCase(route.key) : ''))
-  /** Counts lookups, so repeating one still counts as a new event. */
+  /** Lookup counter so repeats count as new */
   const [scanCount, setScanCount] = useState(0)
-  /** Holds Rotom in its scanning state for a beat after each new request. */
+  /** Holds the scanning state briefly after each request */
   const [scanHold, setScanHold] = useState(false)
   const scanTimer = useRef(0)
 
-  // ---------------------------------------------------------- power
+  // Power
 
-  // Every visit starts with Rotom asleep. Nothing is looked up until it is switched on.
+  // Every visit starts asleep, nothing loads until it wakes
   const [power, setPower] = useState<RotomPower>('asleep')
   const awake = power === 'awake'
   const wakeTimer = useRef(0)
-  /** Counts cheers: each one makes Rotom hop with its eyes squeezed shut. */
+  /** Cheer counter, each one makes Rotom hop */
   const [cheer, setCheer] = useState(0)
-  /** Rotom's answer to being poked, until something else happens. */
+  /** Reply to being poked */
   const [quip, setQuip] = useState<string | null>(null)
-  /** Holds the big grin for a moment (the greeting). */
+  /** Holds the big grin for the greeting */
   const [grinHold, setGrinHold] = useState(false)
   const grinTimer = useRef(0)
 
@@ -107,7 +105,7 @@ export default function App() {
 
   const wake = useCallback(() => {
     if (power !== 'asleep') return
-    // This tap is also what lets the browser play sound and speech from here on.
+    // This tap also unlocks browser audio
     sfx.unlock()
     sfx.powerOn()
     setPower('waking')
@@ -116,7 +114,7 @@ export default function App() {
       () => {
         setPower('awake')
         if (route.key) {
-          // Opened from a link to an entry: go straight to scanning it.
+          // Opened from an entry link, scan it right away
           sfx.scan()
           beginScanHold()
         } else if (route.section || route.menu) {
@@ -155,11 +153,10 @@ export default function App() {
     [],
   )
 
-  // ---------------------------------------------------------- the API hooks
+  // API hooks
 
   const index = useDatabankIndex(activeSection)
-  // The search field looks through every databank, wherever you are. If one
-  // is open, its own matches are listed first.
+  // Search covers every databank, the open one first
   const everything = useEveryIndex(awake)
   const searching = awake && input.trim() !== ''
   const search = useMemo(() => {
@@ -167,7 +164,7 @@ export default function App() {
     const lists = section ? [...everything.lists].sort((a, b) => Number(b.section === section) - Number(a.section === section)) : everything.lists
     return { ...searchAll(input, lists, SEARCH_LIMIT), loading: everything.loading }
   }, [searching, input, everything, section])
-  // Pokémon go through the dedicated Rotom hook; every other databank through the generic one.
+  // Pokémon use their own hook, the rest the generic one
   const pokemonQuery = useRotomApi(activeSection === 'pokemon' ? lookup : null)
   const databankQuery = useDatabankEntry(activeSection === 'pokemon' ? null : activeSection, lookup)
 
@@ -177,17 +174,15 @@ export default function App() {
       ? { pending: pokemonQuery.isPending, error: pokemonQuery.error, entry: pokemonEntry }
       : { pending: databankQuery.isPending, error: databankQuery.error, entry: databankQuery.data }
 
-  // ---------------------------------------------------------- Rotom's core system emotion
+  // Emotion
 
-  // The emotion is the lookup's life cycle, read straight off the hooks:
-  //   nothing requested -> IDLE, request in flight -> SCANNING,
-  //   data resolved -> SUCCESS, request failed or entry unknown -> ERROR.
+  // Idle with no request, scanning while loading, success on data, error on failure
   const emotion: RotomEmotion = !lookup ? 'IDLE' : scanHold || lookupState.pending ? 'SCANNING' : lookupState.error ? 'ERROR' : 'SUCCESS'
   const entry = emotion === 'SUCCESS' ? lookupState.entry : undefined
 
-  // ---------------------------------------------------------- what Rotom's screen shows
+  // Screen content
 
-  // A result goes onto the screen once Rotom has finished its lunge and spin.
+  // Show the result after the spin
   const reportKey = entry ? `${entry.section}/${entry.key}/${scanCount}` : null
   const [revealed, setRevealed] = useState<string | null>(null)
   useEffect(() => {
@@ -196,11 +191,10 @@ export default function App() {
     return () => window.clearTimeout(timer)
   }, [reportKey, reducedMotion, phone])
 
-  // Typing brings the search results up over whatever was showing (except in the middle of a scan).
+  // Typing shows search results unless scanning
   const view: ScreenView = !awake ? 'face' : searching && emotion !== 'SCANNING' ? 'search' : entry ? 'entry' : emotion !== 'IDLE' ? 'face' : section ? 'list' : route.menu ? 'menu' : 'face'
 
-  // Rotom's face lives on its screen, so it shows between one screen and the
-  // next: each change of menu or list is a short flash of its grin.
+  // Face flashes between screens
   const screenKey = `${view}:${section ?? ''}`
   const [settledScreen, setSettledScreen] = useState(screenKey)
   useEffect(() => {
@@ -210,15 +204,15 @@ export default function App() {
   }, [screenKey, settledScreen, view])
   const switching = settledScreen !== screenKey && (view === 'menu' || view === 'list')
 
-  // Asleep and starting up, the screen shows its own power screens.
+  // Power screens while asleep or starting up
   const screenVisible = !awake ? true : view === 'entry' ? revealed === reportKey : view !== 'face' && !switching
   const grinning = awake && (switching || grinHold)
 
-  // The camera comes in close whenever there is something to read; the user can override it per view.
+  // Zoom in when there is something to read, user can override per view
   const [shotChoice, setShotChoice] = useState<{ view: ScreenView; shot: Shot } | null>(null)
   const shot: Shot = !awake ? 'wide' : shotChoice?.view === view ? shotChoice.shot : view === 'face' ? 'wide' : 'close'
 
-  // ---------------------------------------------------------- actions
+  // Actions
 
   const scan = useCallback(
     (target: SectionId, raw: string) => {
@@ -270,7 +264,7 @@ export default function App() {
     sfx.unlock()
     sfx.poke()
     setCheer((count) => count + 1)
-    // It only stops to chat when it has nothing else on.
+    // Only chats when idle
     if (emotion === 'IDLE' && view === 'face') {
       const fresh = QUIPS.filter((candidate) => candidate !== quip)
       const line = fresh[Math.floor(Math.random() * fresh.length)]
@@ -282,8 +276,7 @@ export default function App() {
   const actions: HudActions = useMemo(
     () => ({
       setInput,
-      // Take the best match from all the databanks; failing any, ask the open
-      // databank (or Pokémon) for that name and let the API have the final say.
+      // Best match across databanks, else let the API decide
       submit: () => {
         const best = search.hits[0]
         if (best) scan(best.section, best.item.key)
@@ -300,7 +293,7 @@ export default function App() {
       },
       open: (link: EntryLink) => scan(link.section, link.key),
       openSection: (target: SectionId) => show({ section: target, key: null, menu: true }),
-      // The menu key opens the menu, or puts it away again if it is already showing.
+      // Menu key toggles the menu
       openMenu: () => show({ section: null, key: null, menu: !(route.menu && !section) }),
       back: () => {
         if (searching) setInput('')
@@ -320,11 +313,10 @@ export default function App() {
     [scan, show, step, activeSection, input, index.data, lookup, section, route.menu, view, shot, wake, sleep, poke, search, searching],
   )
 
-  // ---------------------------------------------------------- what Rotom says
+  // Speech
 
   const notFound = emotion === 'ERROR' && lookupState.error?.kind !== 'network'
-  // A report comes in parts: Rotom's recorded line, which it says aloud, then
-  // (for a result) the entry itself, which only the text box carries.
+  // A report is a spoken line, then the entry in the text box
   const report = useMemo(() => {
     if (emotion === 'SUCCESS' && entry) return [scanOpener(entry.section), entry.speech]
     if (emotion === 'ERROR') return [errorLine(activeSection, notFound ? 'not-found' : 'network')]
@@ -342,8 +334,7 @@ export default function App() {
     return quip ?? GREETING
   }, [power, phone, emotion, report, asked, view, activeSection, quip])
 
-  // The speech engine fires the moment the lookup resolves, in step with the
-  // success spin (or the error shake). Starting a new scan cuts it off.
+  // Speak as the lookup resolves, a new scan cuts it off
   useEffect(() => {
     if (!report) return
     if (emotion === 'SUCCESS') sfx.success()
@@ -354,13 +345,13 @@ export default function App() {
     if (emotion === 'SCANNING') stop()
   }, [emotion, scanCount, stop])
 
-  // Opening the menu or a databank's list gets a line of its own.
+  // Menu and list openings get their own line
   const browsing = awake && emotion === 'IDLE' ? (view === 'menu' ? 'menu' : view === 'list' ? activeSection : null) : null
   useEffect(() => {
     if (browsing) say(browsing === 'menu' ? MENU_LINE : listLine(browsing))
   }, [browsing, say])
 
-  // ---------------------------------------------------------- address bar and keyboard
+  // Address bar and keyboard
 
   useEffect(() => {
     const hash = routeHash(route)
@@ -383,11 +374,11 @@ export default function App() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey || event.altKey) return
       const target = event.target as HTMLElement | null
-      // The volume slider is an input too, but nobody types in it.
+      // Ignore the volume slider as a text input
       const onSlider = target instanceof HTMLInputElement && target.type === 'range'
       const typing = (target instanceof HTMLInputElement && !onSlider) || target instanceof HTMLTextAreaElement
       if (!awake) {
-        // Asleep, the only thing the keyboard does is switch it on.
+        // Asleep, any key wakes it
         if ((event.key === 'Enter' || event.key === ' ') && !(target instanceof HTMLButtonElement)) {
           event.preventDefault()
           actions.wake()
@@ -403,7 +394,7 @@ export default function App() {
       if (event.key.toLowerCase() === 'm') voice.toggleMuted()
       else if (event.key === '+' || event.key === '=') voice.setVolume((voice.muted ? 0 : voice.volume) + 0.1)
       else if (event.key === '-' || event.key === '_') voice.setVolume((voice.muted ? 0 : voice.volume) - 0.1)
-      // With the slider in hand, the arrow keys belong to it.
+      // Arrow keys belong to the slider when focused
       else if (onSlider) return
       else if (event.key === '/') {
         event.preventDefault()
@@ -422,10 +413,9 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [actions, voice, awake, screenVisible])
 
-  // ---------------------------------------------------------- layout
+  // Layout
 
-  // The camera keeps Rotom clear of the header and of the band of controls,
-  // whose height depends on the layout.
+  // Camera keeps Rotom clear of the header and controls
   const bandRef = useRef<HTMLDivElement>(null)
   const bandHeight = useElementHeight(bandRef)
   const viewport = useWindowSize()

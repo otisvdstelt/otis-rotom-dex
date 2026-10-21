@@ -1,12 +1,12 @@
-/** Rotom's core system emotion. It mirrors the life cycle of the current lookup. */
+/** Rotom emotion, follows the current lookup */
 export type RotomEmotion = 'IDLE' | 'SCANNING' | 'SUCCESS' | 'ERROR'
 
-/** The colour Rotom's lights take in each state; the HUD's status chip uses the same ones. */
+/** Light colour per state, also used by the HUD */
 export const EMOTION_COLOR: Record<RotomEmotion, string> = {
-  IDLE: '#ffb547', // soft amber
-  SCANNING: '#2ff3ff', // electric cyan
-  SUCCESS: '#3dff8a', // neon green
-  ERROR: '#ff3b30', // hazard red
+  IDLE: '#ffb547',
+  SCANNING: '#2ff3ff',
+  SUCCESS: '#3dff8a',
+  ERROR: '#ff3b30',
 }
 
 export const EMOTION_LABEL: Record<RotomEmotion, string> = {

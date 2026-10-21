@@ -1,11 +1,5 @@
-// The Rotom Dex's table of contents. Order here is the order in the launcher.
-//
-// Adding a databank:
-//   1. Write a module exporting a `Databank` (see types.ts): how to list its
-//      entries and how to turn one API record into a `DexEntry`.
-//   2. Add its id to `SectionId` in types.ts and list it below.
-// Search, the index list, Prev/Next, random scan, cross-links, the details
-// panel and Rotom's speech then work without further changes.
+// Databank list in launcher order. To add one, write a Databank module,
+// add its id to SectionId in types.ts and list it here
 import { Compass, Layers, Medal, Tv, Users } from 'lucide-react'
 import { abilitiesDatabank, movesDatabank, typesDatabank } from './battle'
 import { ballsDatabank, berriesDatabank, itemsDatabank, treatsDatabank } from './items'
@@ -30,7 +24,7 @@ export const DATABANKS = Object.fromEntries(DATABANK_LIST.map((databank) => [dat
 
 export const isSectionId = (value: string): value is SectionId => value in DATABANKS
 
-/** Slots reserved in the menu for databanks that are not written yet. */
+/** Empty menu slots for future databanks */
 export const PLANNED_DATABANKS: PlannedDatabank[] = [
   { id: 'leaders', label: 'Gym leader teams', blurb: 'Each leader’s line-up, game by game', icon: Users },
   { id: 'locations', label: 'Places & encounters', blurb: 'What lives on every route', icon: Compass },

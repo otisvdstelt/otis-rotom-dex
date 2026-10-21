@@ -10,7 +10,7 @@ function Wordmark() {
   return <p className="text-[1.15rem] font-black uppercase tracking-[0.04em] text-white [text-shadow:0_2px_0_rgb(8_32_120/0.9)] lg:text-[1.4rem]">Rotom Dex</p>
 }
 
-/** Rotom's system state, spelled out: the same four states that drive its body, lights and face. */
+/** Rotom system state, the same four states that drive body, lights and face */
 function StatusChip({ emotion, power }: { emotion: RotomEmotion; power: RotomPower }) {
   const awake = power === 'awake'
   const label = power === 'asleep' ? 'ASLEEP' : power === 'waking' ? 'STARTING' : emotion
@@ -29,17 +29,12 @@ const HEADER_KEY = 'grid size-10 place-items-center rounded-full border-2 border
 interface GameHUDProps {
   state: HudState
   actions: HudActions
-  /** The band of controls along the bottom; its measured height keeps the camera clear of it. */
+  /** Bottom control band, its height keeps the camera clear */
   bandRef: RefObject<HTMLDivElement | null>
   searchRef: RefObject<HTMLInputElement | null>
 }
 
-/**
- * The overlay around Rotom. All data lives on Rotom's own screen; what sits
- * out here is only what a trainer holds: Rotom's text box and the keys. On a
- * desktop the two sit side by side under Rotom; on a phone they stack, keys
- * lowest, within thumb reach.
- */
+/** Overlay with the text box and keys. Side by side on desktop, stacked on a phone */
 export function GameHUD({ state, actions, bandRef, searchRef }: GameHUDProps) {
   const awake = state.power === 'awake'
   const reportReady = awake && (state.emotion === 'SUCCESS' || state.emotion === 'ERROR')

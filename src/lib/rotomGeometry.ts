@@ -1,17 +1,5 @@
-// Rotom Dex's body, built from code to follow the anime and the Sun & Moon
-// model sheet: a flat red tablet with an arrowhead of a head (a low roof
-// running out to two pointed ears) on a narrower, boxier lower body; a fat
-// cone of a spike on top; a pale screen low on the front with the eyes sitting
-// on its upper edge and a dark dome between them; zigzag arms that end in big
-// flared paddles; and two teardrop feet.
-//
-// Used twice: scripts/build-rotom.ts bakes these parts into
-// public/assets/rotom_device.glb, and RotomModel builds them at runtime as the
-// fallback when that file is missing. One source, so the two never drift apart.
-//
-// Units: the body is 3.0 wide (ear to ear) and 2.6 tall, centred near the
-// origin, facing +Z. Arms and spike are modelled around their own joint so
-// they can be posed; ROTOM_PART_PIVOT says where each joint sits on the body.
+// Rotom Dex body built from code. Baked into the GLB by build rotom and used as
+// the runtime fallback, so both stay the same. 3 wide, 2.6 tall, facing positive Z
 import { BufferAttribute, Color, ExtrudeGeometry, LatheGeometry, Path, Shape, ShapeGeometry, Vector2, Vector3, type BufferGeometry } from 'three'
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { ROTOM } from './rotomSpec.ts'
@@ -43,7 +31,7 @@ const ARM_PIVOT: [number, number, number] = [1.02, -0.42, -0.02]
 
 const ARM_PIVOT_LEFT: [number, number, number] = [-ARM_PIVOT[0], ARM_PIVOT[1], ARM_PIVOT[2]]
 
-/** Where a part hangs when it is modelled around its own joint instead of the body origin. */
+/** Joint position for parts modelled around their own pivot */
 export const ROTOM_PART_PIVOT: Partial<Record<RotomPart, [number, number, number]>> = {
   Spike: [0, 1.12, 0],
   ArmR: ARM_PIVOT,
@@ -52,17 +40,17 @@ export const ROTOM_PART_PIVOT: Partial<Record<RotomPart, [number, number, number
   HandL: ARM_PIVOT_LEFT,
 }
 
-/** Centre of the paddle hand, in the arm's own space (right arm; mirror X for the left). */
+/** Hand centre in arm space, mirror X for the left */
 export const HAND_CENTER: [number, number] = [1.38, -0.16]
 
-/** Rotom Dex's body colour. The spike's vertex colours start from it, so it lives with the geometry. */
+/** Body colour, also the spike gradient start */
 export const ROTOM_RED = '#de3b3d'
 
 type Point = [number, number]
 
-// ---------------------------------------------------------------- shape helpers
+// Shape helpers
 
-/** Polygon with every corner rounded off by `radius` (or one radius per corner). */
+/** Polygon with rounded corners */
 function roundedPolygon<T extends Shape | Path>(points: Point[], radius: number | number[], target: T): T {
   const n = points.length
   const corner = (i: number) => {
@@ -99,20 +87,14 @@ function roundedRect<T extends Shape | Path>(width: number, height: number, radi
 
 const mirrorX = (points: Point[]): Point[] => points.map(([x, y]) => [-x, y] as Point).reverse()
 
-/**
- * The front face of the body: a low, nearly straight roof that rounds over a
- * shoulder and drops to a sharp ear tip on each side, a cut back in under
- * the ear, then nearly straight sides down to a flat bottom with rounded
- * corners. (The bevel added when it is extruded pushes the silhouette out a
- * little further.)
- */
+/** Body front outline, roof, ears and flat bottom */
 function bodyShape(): Shape {
   const s = new Shape()
   s.moveTo(0, 1.16)
   s.bezierCurveTo(0.42, 1.16, 0.8, 1.0, 1.06, 0.84) // roof
-  s.bezierCurveTo(1.24, 0.72, 1.37, 0.58, 1.41, 0.42) // shoulder, down to the ear's tip
-  s.quadraticCurveTo(1.27, 0.13, 0.98, 0.0) // the cut back in under the ear
-  s.lineTo(0.93, -1.04) // side, tapering a little
+  s.bezierCurveTo(1.24, 0.72, 1.37, 0.58, 1.41, 0.42) // shoulder to ear tip
+  s.quadraticCurveTo(1.27, 0.13, 0.98, 0.0) // cut under the ear
+  s.lineTo(0.93, -1.04) // side
   s.quadraticCurveTo(0.92, -1.27, 0.68, -1.27) // bottom corner
   s.lineTo(-0.68, -1.27)
   s.quadraticCurveTo(-0.92, -1.27, -0.93, -1.04)
@@ -123,10 +105,7 @@ function bodyShape(): Shape {
   return s
 }
 
-/**
- * The spike's silhouette, from its foot (buried in the crown) to its tip, as
- * [radius, height] pairs: a fat cone that flares where it meets the head.
- */
+/** Spike profile as radius and height pairs */
 const SPIKE_PROFILE: Point[] = [
   [0.37, -0.22],
   [0.345, 0],
@@ -140,7 +119,7 @@ const SPIKE_PROFILE: Point[] = [
   [0, 1.57],
 ]
 
-/** A foot: a teardrop hanging from the body by its point. [radius, height] pairs, top to bottom. */
+/** Teardrop foot profile, top to bottom */
 const FOOT_PROFILE: Point[] = [
   [0, 0.26],
   [0.07, 0.16],
@@ -152,11 +131,7 @@ const FOOT_PROFILE: Point[] = [
   [0, -0.42],
 ]
 
-/**
- * One arm, from the shoulder outward: a thin strut that kicks up to a peak,
- * jogs back down, and opens into a big paddle that flares toward its far
- * end. Together they read as a lightning bolt.
- */
+/** Arm shape from shoulder to paddle, reads as a lightning bolt */
 const ARM_OUTLINE: Point[] = [
   [0, 0.06],
   [0.4, 0.1],
@@ -172,7 +147,7 @@ const ARM_OUTLINE: Point[] = [
 ]
 const ARM_CORNERS = [0.03, 0.05, 0.06, 0.04, 0.14, 0.15, 0.17, 0.14, 0.05, 0.04, 0.03]
 
-/** Lightning-bolt panel moulded into the back (right side as seen from behind; mirrored for the left). */
+/** Lightning bolt panel on the back */
 const BACK_BOLT: Point[] = [
   [0.36, 0.74],
   [0.92, 0.74],
@@ -184,13 +159,9 @@ const BACK_BOLT: Point[] = [
   [0.4, -0.2],
 ]
 
-// ---------------------------------------------------------------- geometry helpers
+// Geometry helpers
 
-/**
- * Recomputes normals so bevels and curved walls shade smoothly while flat
- * front/back faces stay flat and real corners stay crisp. Cel shading shows
- * every normal error as a wrong band, so this matters more than usual.
- */
+/** Smooth normals on curves, flat faces and sharp corners stay crisp */
 function shadeSmooth(geometry: BufferGeometry, creaseDegrees = 38): BufferGeometry {
   const g = geometry.index ? geometry.toNonIndexed() : geometry
   g.deleteAttribute('normal')
@@ -241,11 +212,11 @@ function shadeSmooth(geometry: BufferGeometry, creaseDegrees = 38): BufferGeomet
 }
 
 interface ExtrudeOptions {
-  /** Thickness of the flat-sided middle, not counting the bevels. */
+  /** Flat middle thickness without bevels */
   depth: number
-  /** Bevel radius. It rounds the edge and widens the outline by the same amount. */
+  /** Bevel radius */
   bevel: number
-  /** Z of the finished front face. */
+  /** Front face Z */
   frontZ: number
   bevelSegments?: number
   curveSegments?: number
@@ -265,7 +236,7 @@ function extrude(shape: Shape, { depth, bevel, frontZ, bevelSegments = 3, curveS
   return shadeSmooth(g)
 }
 
-/** Paper-thin inlay lying on a surface. */
+/** Thin inlay on a surface */
 function inlay(shape: Shape, z: number, curveSegments = 10): BufferGeometry {
   const g = new ShapeGeometry(shape, curveSegments)
   g.translate(0, 0, z)
@@ -273,7 +244,7 @@ function inlay(shape: Shape, z: number, curveSegments = 10): BufferGeometry {
   return g
 }
 
-/** A low dome on the XY plane, optionally stretched into an oval. */
+/** Low dome, optionally oval */
 function dome(radius: number, height: number, baseZ: number, x: number, y: number, stretchX = 1, radialSegments = 26): BufferGeometry {
   const steps = 6
   const points = [new Vector2(radius, 0)]
@@ -289,9 +260,9 @@ function dome(radius: number, height: number, baseZ: number, x: number, y: numbe
   return g
 }
 
-/** Spins a [radius, height] profile round the Y axis, then flattens it front to back. */
+/** Lathes a profile round Y, then flattens it */
 function revolve(profile: Point[], flatten: number, radialSegments = 22): BufferGeometry {
-  // Lathe wants the profile bottom-up for outward-facing walls.
+  // Lathe wants the profile bottom up
   const points = [...profile].sort((a, b) => a[1] - b[1]).map(([r, y]) => new Vector2(r, y))
   const g = new LatheGeometry(points, radialSegments)
   g.scale(1, 1, flatten)
@@ -299,7 +270,7 @@ function revolve(profile: Point[], flatten: number, radialSegments = 22): Buffer
   return g
 }
 
-/** Turns a part built on the front face around so it sits on the back. */
+/** Moves a front part to the back */
 const toBack = (g: BufferGeometry): BufferGeometry => g.rotateY(Math.PI)
 
 const merged = (parts: BufferGeometry[]): BufferGeometry => {
@@ -308,7 +279,7 @@ const merged = (parts: BufferGeometry[]): BufferGeometry => {
   return g
 }
 
-/** Paints a vertical gradient into vertex colours, from `from` at the lowest Y to `to` at the highest. */
+/** Vertical gradient into vertex colours */
 function gradeByHeight(g: BufferGeometry, from: string, to: string, bias = 1.6): BufferGeometry {
   g.computeBoundingBox()
   const { min, max } = g.boundingBox!
@@ -325,19 +296,19 @@ function gradeByHeight(g: BufferGeometry, from: string, to: string, bias = 1.6):
   return g
 }
 
-// ---------------------------------------------------------------- the build
+// Build
 
-/** Every part of Rotom Dex as an indexed geometry, keyed by part name. */
+/** Every part as an indexed geometry by name */
 export function buildRotomGeometries(): Record<RotomPart, BufferGeometry> {
   const { frontZ, screen, brow } = ROTOM
 
-  // The tablet body: thin, with softly rounded edges.
+  // Body
   const body = extrude(bodyShape(), { depth: 0.3, bevel: 0.1, frontZ, bevelSegments: 5, curveSegments: 18 })
 
-  // The spike. The anime tints its tip from red toward magenta.
+  // Spike, red to magenta tip
   const spike = gradeByHeight(revolve(SPIKE_PROFILE, 0.56, 26), ROTOM_RED, '#f070b8', 2.4)
 
-  // Screen: a dark hairline frame and the pale display inside it (0..1 UVs).
+  // Screen frame and display
   const screenTop = screen.y + screen.height / 2
   const frameShape = roundedRect(screen.width + 0.08, screen.height + 0.08, screen.radius + 0.03, 0, screen.y, new Shape())
   frameShape.holes.push(roundedRect(screen.width, screen.height, screen.radius, 0, screen.y, new Path()))
@@ -353,14 +324,14 @@ export function buildRotomGeometries(): Record<RotomPart, BufferGeometry> {
     screenGeometry.translate(0, 0, frontZ + 0.006)
   }
 
-  // The dark dome between the eyes, standing on the screen's top edge.
+  // Dome between the eyes
   const browShape = new Shape()
   browShape.moveTo(-brow.halfWidth, screenTop)
   browShape.absellipse(0, screenTop, brow.halfWidth, brow.top - screenTop, Math.PI, 0, true, 0)
   browShape.closePath()
   const browGeometry = inlay(browShape, frontZ + 0.005, 20)
 
-  // Two speaker holes on each cheek.
+  // Cheek speaker holes
   const speakerHoles = merged(
     [
       [1.04, 0.68],
@@ -368,7 +339,7 @@ export function buildRotomGeometries(): Record<RotomPart, BufferGeometry> {
     ].flatMap(([x, y]) => [inlay(new Shape().absarc(x, y, 0.042, 0, Math.PI * 2, false), frontZ + 0.004, 10), inlay(new Shape().absarc(-x, y, 0.042, 0, Math.PI * 2, false), frontZ + 0.004, 10)]),
   )
 
-  // Two teardrop feet hanging under the body, toes turned out a little.
+  // Feet
   const feet = merged(
     [-1, 1].map((side) => {
       const g = revolve(FOOT_PROFILE, 0.8, 20)
@@ -379,17 +350,17 @@ export function buildRotomGeometries(): Record<RotomPart, BufferGeometry> {
     }),
   )
 
-  // Arms, each around its shoulder joint.
+  // Arms around the shoulder joint
   const armOptions: ExtrudeOptions = { depth: 0.08, bevel: 0.05, frontZ: 0.09, bevelSegments: 3, curveSegments: 6 }
   const armR = extrude(roundedPolygon(ARM_OUTLINE, ARM_CORNERS, new Shape()), armOptions)
   const armL = extrude(roundedPolygon(mirrorX(ARM_OUTLINE), [...ARM_CORNERS].reverse(), new Shape()), armOptions)
 
-  // The oval boss on each hand, front and back, in that arm's own space.
+  // Hand bosses
   const [hx, hy] = HAND_CENTER
   const handR = merged([dome(0.17, 0.05, 0.09, hx, hy, 1.65), toBack(dome(0.17, 0.05, 0.09, -hx, hy, 1.65))])
   const handL = merged([dome(0.17, 0.05, 0.09, -hx, hy, 1.65), toBack(dome(0.17, 0.05, 0.09, hx, hy, 1.65))])
 
-  // Back: two moulded lightning bolts, the camera port between them, a small button.
+  // Back bolts, camera port and button
   const boltOptions: ExtrudeOptions = { depth: 0.012, bevel: 0.014, frontZ: frontZ + 0.03, bevelSegments: 2, curveSegments: 4 }
   const backBolts = toBack(merged([extrude(roundedPolygon(BACK_BOLT, 0.04, new Shape()), boltOptions), extrude(roundedPolygon(mirrorX(BACK_BOLT), 0.04, new Shape()), boltOptions)]))
   const backPort = toBack(

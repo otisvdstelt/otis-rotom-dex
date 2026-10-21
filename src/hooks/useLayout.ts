@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore, type RefObject } from 'react'
 
-/** Live result of a CSS media query. */
+/** Live CSS media query result */
 export function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(
     (onChange) => {
@@ -17,14 +17,14 @@ const onResize = (onChange: () => void) => {
   return () => window.removeEventListener('resize', onChange)
 }
 
-/** The window's inner size, kept current as it resizes. */
+/** Window size, kept current */
 export function useWindowSize(): { width: number; height: number } {
   const width = useSyncExternalStore(onResize, () => window.innerWidth)
   const height = useSyncExternalStore(onResize, () => window.innerHeight)
   return { width, height }
 }
 
-/** An element's rendered height in pixels, kept current as it resizes (0 until it mounts). */
+/** Element height in pixels, 0 until mounted */
 export function useElementHeight(target: RefObject<HTMLElement | null>): number {
   const [height, setHeight] = useState(0)
 
@@ -41,13 +41,10 @@ export function useElementHeight(target: RefObject<HTMLElement | null>): number 
   return height
 }
 
-/**
- * Reveals `text` a few characters at a time, like speech appearing in a text
- * box. Restarts whenever the text changes; `skip` shows the rest at once.
- */
+/** Reveals text a few characters at a time, skip shows it all */
 export function useTypewriter(text: string, charactersPerSecond = 34): { shown: string; done: boolean; skip: () => void } {
   const [progress, setProgress] = useState({ text, count: 0 })
-  // A new line starts from nothing (adjusted during render, not in an effect).
+  // Reset during render when the text changes
   if (progress.text !== text) setProgress({ text, count: 0 })
   const count = progress.text === text ? progress.count : 0
 

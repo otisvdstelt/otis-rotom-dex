@@ -9,9 +9,9 @@ import { TypeLabel } from './TypeLabel'
 
 type Open = (link: EntryLink) => void
 
-// ------------------------------------------------------------ meters
+// Meters
 
-/** Base-stat tiers, coloured the way the games' summary screens colour them. */
+/** Base stat colour tiers */
 function statColor(value: number): string {
   if (value < 50) return '#f2553f'
   if (value < 80) return '#f59a23'
@@ -21,8 +21,7 @@ function statColor(value: number): string {
 }
 
 function Meters({ meters }: { meters: EntryMeters }) {
-  // Start empty so the bars sweep up on first show; after that, a new entry
-  // slides each bar from its old value to the new one.
+  // Start empty so bars sweep up, then slide between entries
   const [armed, setArmed] = useState(false)
   useEffect(() => {
     const frame = requestAnimationFrame(() => setArmed(true))
@@ -67,7 +66,7 @@ function Meters({ meters }: { meters: EntryMeters }) {
   )
 }
 
-// ------------------------------------------------------------ linked groups
+// Linked groups
 
 function Chip({ chip, open }: { chip: EntryChip; open: Open }) {
   const [imageBroken, setImageBroken] = useState(false)
@@ -87,7 +86,7 @@ function Chip({ chip, open }: { chip: EntryChip; open: Open }) {
   )
 }
 
-/** A gym badge with its real artwork, or a stand-in gem where the games awarded no badge. */
+/** Gym badge artwork, or a stand in gem */
 function Badge({ chip, index }: { chip: EntryChip; index: number }) {
   const [imageBroken, setImageBroken] = useState(false)
   return (
@@ -105,11 +104,11 @@ function Badge({ chip, index }: { chip: EntryChip; index: number }) {
   )
 }
 
-/** How many more chips each press of "and N more" brings out, so a list of hundreds opens in steps. */
+/** Chips revealed per press of and N more */
 const MORE_STEP = 48
 
 function Group({ group, open }: { group: EntryGroup; open: Open }) {
-  // A long group starts with its first few; "and N more" opens the rest.
+  // Long groups start short
   const [shown, setShown] = useState(group.first ?? group.chips.length)
   const waiting = Math.max(0, group.chips.length - shown)
   return (
@@ -148,12 +147,12 @@ function Group({ group, open }: { group: EntryGroup; open: Open }) {
   )
 }
 
-// ------------------------------------------------------------ Pokémon extras
+// Pokémon extras
 
 function EvolutionFamily({ url, current, open }: { url: string; current: number | null; open: Open }) {
   const family = useEvolutionFamily(url)
   if (family.isError) return null
-  // A family of one has nothing to show.
+  // Nothing to show for a family of one
   if (family.data && family.data.length < 2) return null
 
   return (
@@ -187,7 +186,7 @@ function EvolutionFamily({ url, current, open }: { url: string; current: number 
   )
 }
 
-// ------------------------------------------------------------ the entry
+// The entry
 
 interface ScreenEntryProps {
   entry: DexEntry
@@ -195,16 +194,11 @@ interface ScreenEntryProps {
   muted: boolean
 }
 
-/**
- * One entry from any databank, as Rotom shows it on its screen: picture,
- * number, name and types, then whatever meters, facts and linked groups that
- * kind of entry has. The description is not printed here; it appears
- * in the text box.
- */
+/** One entry on the Rotom screen. The description goes in the text box */
 export function ScreenEntry({ entry, open, muted }: ScreenEntryProps) {
   const [imageBroken, setImageBroken] = useState(false)
   const showImage = entry.image && !imageBroken
-  // Pokémon can be shown in their shiny colours, where that artwork exists.
+  // Shiny artwork where it exists
   const [shiny, setShiny] = useState(false)
   const [shinyMissing, setShinyMissing] = useState(false)
   const shinyShown = shiny && Boolean(entry.shinyImage) && !shinyMissing

@@ -1,12 +1,10 @@
-// Rotom's non-verbal sounds, synthesised with Web Audio so there is nothing to
-// download. The "BZZZT!" that opens every report is the buzz() here: speech
-// engines spell that word out letter by letter, a real buzz sounds right.
+// Rotom sound effects synthesised with Web Audio, including the BZZZT buzz
 
 type AudioContextCtor = typeof AudioContext
 
 let context: AudioContext | null = null
 
-/** The page's one audio context (null where Web Audio is missing). Rotom's voice is mixed through it too. */
+/** Shared audio context, null without Web Audio */
 export function audio(): AudioContext | null {
   try {
     const Ctor: AudioContextCtor | undefined = window.AudioContext ?? (window as unknown as { webkitAudioContext?: AudioContextCtor }).webkitAudioContext
@@ -21,10 +19,10 @@ export function audio(): AudioContext | null {
 
 interface Tone {
   type: OscillatorType
-  /** Frequency at the start and end of the tone, in Hz. */
+  /** Start and end frequency in Hz */
   from: number
   to: number
-  /** Seconds after "now" that the tone starts. */
+  /** Start delay in seconds */
   at: number
   duration: number
   gain: number
@@ -51,10 +49,10 @@ function play(tones: Tone[], level = 1) {
 }
 
 export const sfx = {
-  /** Call from a click or key press so the browser allows sound afterwards. */
+  /** Call from a user gesture to unlock audio */
   unlock: () => void audio(),
 
-  /** The electric "BZZZT!": two detuned saws grinding against each other. `level` follows the voice's volume. */
+  /** BZZZT buzz, level follows the voice volume */
   buzz: (level = 1) =>
     play(
       [
@@ -65,24 +63,24 @@ export const sfx = {
       level,
     ),
 
-  /** A rising run of blips as a scan starts. */
+  /** Rising blips on scan */
   scan: () => play([0, 1, 2, 3].map((i) => ({ type: 'square' as const, from: 620 + i * 140, to: 660 + i * 140, at: i * 0.07, duration: 0.05, gain: 0.022 }))),
 
-  /** Two bright notes: found it. */
+  /** Found it */
   success: () =>
     play([
       { type: 'triangle', from: 880, to: 880, at: 0, duration: 0.09, gain: 0.05 },
       { type: 'triangle', from: 1318, to: 1318, at: 0.09, duration: 0.16, gain: 0.05 },
     ]),
 
-  /** A sagging double honk: nothing found. */
+  /** Nothing found */
   error: () =>
     play([
       { type: 'square', from: 220, to: 150, at: 0, duration: 0.16, gain: 0.035 },
       { type: 'square', from: 190, to: 110, at: 0.19, duration: 0.24, gain: 0.035 },
     ]),
 
-  /** Switching on: a charge winding up, then three rising chimes. */
+  /** Power on */
   powerOn: () =>
     play([
       { type: 'sawtooth', from: 70, to: 520, at: 0, duration: 0.62, gain: 0.035 },
@@ -92,16 +90,16 @@ export const sfx = {
       { type: 'triangle', from: 1320, to: 1320, at: 0.86, duration: 0.2, gain: 0.05 },
     ]),
 
-  /** Switching off: the charge running down. */
+  /** Power off */
   powerOff: () => play([{ type: 'sawtooth', from: 420, to: 60, at: 0, duration: 0.5, gain: 0.03 }]),
 
-  /** A startled chirp when Rotom is poked. */
+  /** Poked chirp */
   poke: () =>
     play([
       { type: 'square', from: 780, to: 1180, at: 0, duration: 0.07, gain: 0.03 },
       { type: 'square', from: 1180, to: 940, at: 0.07, duration: 0.08, gain: 0.03 },
     ]),
 
-  /** A key cap going down. */
+  /** Key press */
   tap: () => play([{ type: 'square', from: 900, to: 760, at: 0, duration: 0.04, gain: 0.018 }]),
 }

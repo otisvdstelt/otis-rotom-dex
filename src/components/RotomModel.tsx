@@ -29,21 +29,21 @@ import { lookTarget } from '../lib/look'
 import { buildRotomGeometries, ROTOM, ROTOM_PART_PIVOT, ROTOM_PARTS, ROTOM_RED, type RotomPart } from '../lib/rotomGeometry'
 import { inkOutline, plasmaAura, toonGradient } from '../lib/toon'
 
-// ------------------------------------------------------------ materials
+// Materials
 
 const toon = (color: string) => new MeshToonMaterial({ color, gradientMap: toonGradient })
 
-// One Rotom lives for the whole session, so its materials are module singletons.
+// Module singletons, there is only one Rotom
 const materials = {
   red: toon(ROTOM_RED),
-  /** Feet, hand bosses and the mouldings on the back: the same plastic, a shade deeper. */
+  /** Feet, hands and back mouldings, a deeper shade */
   redDeep: toon('#b9272e'),
-  /** The spike takes its red-to-magenta gradient from vertex colours. */
+  /** Spike gradient from vertex colours */
   spike: new MeshToonMaterial({ color: '#ffffff', vertexColors: true, gradientMap: toonGradient }),
   ink: new MeshBasicMaterial({ color: '#1c1e2e' }),
-  /** The display itself; unlit, because a screen is its own light. */
+  /** Unlit display */
   screen: new MeshBasicMaterial({ color: '#f4f7ff' }),
-  /** The dome between the eyes: part of the display, dark until Rotom's face rises into it. */
+  /** Dome between the eyes, dark until the face rises into it */
   brow: new MeshBasicMaterial({ color: FACE_BROW }),
   white: toon('#ffffff'),
   pupil: new MeshBasicMaterial({ color: '#2f55c6' }),
@@ -68,9 +68,9 @@ const PART_MATERIAL: Record<RotomPart, Material> = {
   BackButton: materials.redDeep,
 }
 
-// Flat inlays read better without an ink line round them.
+// Flat inlays skip the ink line
 const NO_OUTLINE: ReadonlySet<RotomPart> = new Set(['ScreenFrame', 'Screen', 'Brow', 'SpeakerHoles', 'BackPupil'])
-// The big shapes that carry the glow of the Rotom inside.
+// Big shapes that carry the glow
 const HAS_AURA: ReadonlySet<RotomPart> = new Set(['Body', 'Spike', 'ArmR', 'ArmL', 'Feet'])
 const SPIKE_PARTS: RotomPart[] = ['Spike']
 const RIGHT_ARM_PARTS: RotomPart[] = ['ArmR', 'HandR']
@@ -79,15 +79,15 @@ const MOVING: ReadonlySet<RotomPart> = new Set([...SPIKE_PARTS, ...RIGHT_ARM_PAR
 
 const SCREEN_WHITE = new Color('#f4f7ff')
 
-// ------------------------------------------------------------ props
+// Props
 
-/** What Rotom shows on its own screen instead of its face. */
+/** What the screen shows instead of the face */
 export interface RotomScreen {
-  /** The interface to display. Rendered as real HTML, mapped onto the screen in 3D. */
+  /** HTML UI mapped onto the screen */
   content: ReactNode
-  /** False while Rotom's face has the screen (idle chatter, scanning, errors). */
+  /** False while the face has the screen */
   visible: boolean
-  /** Size of the content, in CSS pixels, and how many of those make one model unit. */
+  /** Content size in CSS pixels and pixels per model unit */
   width: number
   height: number
   pixelsPerUnit: number
@@ -95,28 +95,28 @@ export interface RotomScreen {
 
 export interface RotomModelProps {
   emotion: RotomEmotion
-  /** True while the speech engine is talking; the mouth moves along. */
+  /** True while speaking, the mouth moves */
   speaking: boolean
-  /** Shrinks shakes, lunges and spins for people who asked for less motion. */
+  /** Reduced motion */
   reducedMotion: boolean
-  /** True when Rotom is holding its screen up to be read: it steadies itself. */
+  /** True while holding the screen up to read, keeps steady */
   presenting: boolean
-  /** Asleep, starting up, or awake. */
+  /** Asleep, starting up or awake */
   power: RotomPower
-  /** Wear the big grin instead of the resting smile. */
+  /** Big grin instead of the resting smile */
   grinning: boolean
-  /** Counts cheers; each new value makes Rotom hop with its eyes squeezed shut. */
+  /** Cheer counter, each change makes Rotom hop */
   cheer: number
-  /** Called when Rotom's body is clicked or tapped (not dragged). */
+  /** Body clicked or tapped, not dragged */
   onPoke?: () => void
   screen: RotomScreen
-  /** Extra objects attached to Rotom's body, such as its emotion light. */
+  /** Extra objects on the body, like the emotion light */
   children?: ReactNode
 }
 
 type PartGeometries = Record<RotomPart, BufferGeometry>
 
-// ------------------------------------------------------------ small pieces
+// Small pieces
 
 function Part({ name, geometry }: { name: RotomPart; geometry: BufferGeometry }) {
   return (
@@ -135,7 +135,7 @@ const sRGB = (loaded: Texture | Texture[] | Record<string, Texture>) => {
   }
 }
 
-// ------------------------------------------------------------ face
+// Face
 
 interface FaceProps {
   emotion: RotomEmotion
@@ -143,17 +143,11 @@ interface FaceProps {
   speaking: boolean
   grinning: boolean
   cheer: number
-  /** While data fills the screen, the mouth layer is hidden; the eyes stay. */
+  /** Hide the mouth while data fills the screen */
   screenBusy: boolean
 }
 
-/**
- * Rotom's face, in the two layers the real device has. The eyes are a plane
- * on the body that overlaps the top of the screen; the blue face and mouth
- * are a plane on the screen itself, rising into the dark dome between the
- * eyes. Both are unlit and swap their texture to match the emotion; the eyes
- * blink and the mouth moves with speech.
- */
+/** Face in two layers, eyes on the body and face on the screen. Unlit, textures follow the emotion */
 function Face({ emotion, power, speaking, grinning, cheer, screenBusy }: FaceProps) {
   const eyeTextures = useTexture(EYE_TEXTURES, sRGB)
   const faceTextures = useTexture(FACE_TEXTURES, sRGB)
@@ -197,9 +191,7 @@ function Face({ emotion, power, speaking, grinning, cheer, screenBusy }: FacePro
         s.face = next.face
         faceMaterial.current.map = faceTextures[next.face]
       }
-      // The face gives way to whatever the screen displays, but only once
-      // that has faded in over it; and it is back the instant the screen
-      // clears. The bare white screen never shows in between.
+      // Hide the face once the screen content has faded in, show it again the moment it clears
       if (s.busy !== screenBusy) {
         s.busy = screenBusy
         s.busySince = t
@@ -208,10 +200,10 @@ function Face({ emotion, power, speaking, grinning, cheer, screenBusy }: FacePro
     }
 
     if (eyes.current) {
-      // A new expression lands with a small pop.
+      // Pop on a new expression
       pop.current = Math.max(0, pop.current - delta * 5)
       eyes.current.scale.setScalar(1 + pop.current * 0.1)
-      // The eyes drift toward the pointer a little.
+      // Eyes drift toward the pointer
       const follow = power === 'awake' && (emotion === 'IDLE' || emotion === 'SUCCESS') ? 1 : 0
       eyes.current.position.x += (lookTarget.x * 0.03 * follow - eyes.current.position.x) * Math.min(1, delta * 8)
       eyes.current.position.y += (ROTOM.eyes.y + lookTarget.y * 0.02 * follow - eyes.current.position.y) * Math.min(1, delta * 8)
@@ -232,19 +224,15 @@ function Face({ emotion, power, speaking, grinning, cheer, screenBusy }: FacePro
   )
 }
 
-// ------------------------------------------------------------ the screen as a display
+// Screen display
 
-/** How long the screen's content takes to fade in. */
+/** Content fade in time */
 const SCREEN_FADE_SECONDS = 0.22
-/** The top of the menus' title bar, and of the switched-off screen. */
+/** Title bar top colour */
 const HEADER_MENU = new Color('#62caf2')
 const HEADER_OFF = new Color('#5f7e77')
 
-/**
- * The strip along the top of the screen that the bottoms of the eyes hang
- * over. The interface laid on the screen is HTML, which cannot pass behind
- * the eyes, so this strip continues its title bar in the 3D scene instead.
- */
+/** Title bar strip behind the eyes, drawn in 3D since HTML cannot pass behind them */
 function ScreenHeader({ visible, power }: { visible: boolean; power: RotomPower }) {
   const material = useRef<MeshBasicMaterial>(null)
   const geometry = useMemo(() => {
@@ -266,7 +254,7 @@ function ScreenHeader({ visible, power }: { visible: boolean; power: RotomPower 
   useFrame((_, delta) => {
     const m = material.current
     if (!m) return
-    // In step with the content below it: in softly, out at once.
+    // Fade in softly, out at once
     m.opacity = visible ? Math.min(1, m.opacity + delta / SCREEN_FADE_SECONDS) : 0
     m.visible = m.opacity > 0.01
     m.color.copy(power === 'awake' ? HEADER_MENU : HEADER_OFF)
@@ -279,14 +267,10 @@ function ScreenHeader({ visible, power }: { visible: boolean; power: RotomPower 
   )
 }
 
-/** How far one notch of a line-based mouse wheel scrolls, in pixels. */
+/** Pixels per line based wheel notch */
 const WHEEL_LINE = 34
 
-/**
- * Whatever Rotom is showing on its screen: live HTML, laid onto the screen in
- * 3D so it tilts, bobs and lunges with the body. It covers the screen below
- * the strip the eyes hang over.
- */
+/** Live HTML on the screen so it moves with the body */
 function ScreenDisplay({ screen, facing, presenting }: { screen: RotomScreen; facing: { current: boolean }; presenting: boolean }) {
   const frame = useRef<HTMLDivElement>(null)
   const canvas = useThree((s) => s.gl.domElement)
@@ -294,13 +278,11 @@ function ScreenDisplay({ screen, facing, presenting }: { screen: RotomScreen; fa
   const unit = screen.pixelsPerUnit
 
   useFrame(() => {
-    // Hidden from behind: HTML has no back face, so without this it would show through the body.
+    // Hide from behind, HTML has no back face
     if (frame.current) frame.current.style.visibility = facing.current ? 'visible' : 'hidden'
   })
 
-  // While Rotom holds its screen up, the wheel scrolls that screen from
-  // anywhere over the scene, not only from right on top of it. (Seen from a
-  // distance, the wheel still zooms the camera.)
+  // In the close view the wheel scrolls the screen from anywhere
   const listening = screen.visible && presenting
   useEffect(() => {
     if (!listening) return
@@ -326,11 +308,11 @@ function ScreenDisplay({ screen, facing, presenting }: { screen: RotomScreen; fa
           borderRadius: `0 0 ${plate.radius * unit}px ${plate.radius * unit}px`,
           overflow: 'hidden',
           opacity: screen.visible ? 1 : 0,
-          // Content appears softly but clears at once, so Rotom's face can flash up between screens.
+          // Soft in, instant out, so the face can flash between screens
           transition: screen.visible ? `opacity ${SCREEN_FADE_SECONDS * 1000}ms ease-out` : 'none',
         }}
         aria-hidden={!screen.visible}
-        // Scrolling and dragging on the display belong to the display, not to the camera.
+        // Scroll and drag go to the display, not the camera
         onWheel={(event) => event.stopPropagation()}
         onPointerDown={(event) => event.stopPropagation()}
       >
@@ -340,7 +322,7 @@ function ScreenDisplay({ screen, facing, presenting }: { screen: RotomScreen; fa
   )
 }
 
-// ------------------------------------------------------------ electricity
+// Electricity
 
 const ARC_SEGMENTS = 9
 const ARC_PATHS: [Vector3, Vector3][] = [
@@ -352,7 +334,7 @@ const ARC_PATHS: [Vector3, Vector3][] = [
 const ARC_COLOR = new Color(1.6, 2.6, 3.2)
 const ARC_START = Array.from({ length: ARC_SEGMENTS + 1 }, () => [0, 0, 0] as [number, number, number])
 
-/** Jagged sparks that jump from the spike to the ears and hands while Rotom is computing or starting up. */
+/** Sparks from the spike to ears and hands while computing or starting */
 function ElectricArcs({ active }: { active: boolean }) {
   const lines = useRef<(Line2 | null)[]>([])
   const nextStrike = useRef(0)
@@ -375,7 +357,7 @@ function ElectricArcs({ active }: { active: boolean }) {
       const positions: number[] = []
       for (let i = 0; i <= ARC_SEGMENTS; i++) {
         const k = i / ARC_SEGMENTS
-        // Largest wander mid-span, pinned at both ends.
+        // Wander most mid span, pinned at the ends
         const wander = Math.sin(k * Math.PI) * 0.26
         scratch.lerpVectors(from, to, k)
         positions.push(scratch.x + (Math.random() - 0.5) * wander, scratch.y + (Math.random() - 0.5) * wander, scratch.z + (Math.random() - 0.5) * wander * 0.5)
@@ -406,21 +388,21 @@ function ElectricArcs({ active }: { active: boolean }) {
   )
 }
 
-// ------------------------------------------------------------ the rig and its emotion engine
+// Rig and emotion engine
 
 const EMOTIONS: RotomEmotion[] = ['IDLE', 'SCANNING', 'SUCCESS', 'ERROR']
 const SUCCESS_MOVE_SECONDS = 1.15
 const HOP_SECONDS = 0.5
 const easeInOutCubic = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
 
-// Scratch values for the frame loop (there is only ever one Rotom).
+// Frame loop scratch values
 const mood = new Color(EMOTION_COLOR.IDLE)
 const moodTarget = new Color()
 const towardCamera = new Vector3()
 const forward = new Vector3()
 const worldPosition = new Vector3()
 
-/** How hard the error shake is, `since` seconds after the error: a long first fit, then short relapses. */
+/** Error shake strength over time, a long fit then short relapses */
 function errorShake(since: number): number {
   if (since < 1.2) return 1
   if (since < 1.6) return 1 - (since - 1.2) / 0.4
@@ -428,9 +410,9 @@ function errorShake(since: number): number {
 }
 
 interface RigProps extends RotomModelProps {
-  /** Named parts, when the model provides them. */
+  /** Named parts, when the model has them */
   parts: PartGeometries | null
-  /** Any other model, shown whole (no moving arms). */
+  /** Any other model, shown whole */
   custom?: Object3D
 }
 
@@ -441,20 +423,20 @@ function RotomRig({ parts, custom, emotion, speaking, reducedMotion, presenting,
   const armR = useRef<Group>(null)
   const spike = useRef<Group>(null)
 
-  // Each emotion's influence, 0..1. They cross-fade, so changing state never snaps the pose.
+  // Emotion weights from 0 to 1, crossfaded so poses never snap
   const weights = useRef<Record<RotomEmotion, number>>({ IDLE: 1, SCANNING: 0, SUCCESS: 0, ERROR: 0 })
   const cue = useRef({ emotion, startedAt: 0 })
   const look = useRef({ yaw: 0, pitch: 0 })
   const steady = useRef(0)
-  /** 1 while asleep, 0 once awake; and how strongly the start-up jolt is running. */
+  /** Sleep amount and startup jolt strength */
   const slumber = useRef(power === 'asleep' ? 1 : 0)
   const boot = useRef(0)
-  /** Small jumps: one when it wakes, one each time it cheers. */
+  /** Hops on wake and cheers */
   const hop = useRef({ power, cheer, startedAt: -10 })
-  /** Whether the screen is turned toward the viewer; read by the HTML display. */
+  /** Whether the screen faces the viewer, read by the HTML display */
   const facing = useRef(true)
 
-  // The pointer cursor shown over Rotom must not outlive it.
+  // Reset the pointer cursor on unmount
   useEffect(
     () => () => {
       document.body.style.cursor = ''
@@ -471,7 +453,7 @@ function RotomRig({ parts, custom, emotion, speaking, reducedMotion, presenting,
     const blend = 1 - Math.exp(-delta * 9)
     for (const key of EMOTIONS) w[key] += ((key === emotion ? 1 : 0) - w[key]) * blend
 
-    // Power: asleep it hangs limp; starting up it crackles; then it is itself.
+    // Limp asleep, crackling at startup
     slumber.current += ((power === 'asleep' ? 1 : power === 'waking' ? 0.45 : 0) - slumber.current) * (1 - Math.exp(-delta * 5))
     boot.current += ((power === 'waking' ? 1 : 0) - boot.current) * (1 - Math.exp(-delta * 10))
     const asleep = slumber.current
@@ -484,40 +466,40 @@ function RotomRig({ parts, custom, emotion, speaking, reducedMotion, presenting,
     const hopProgress = (t - hop.current.startedAt) / HOP_SECONDS
     const hopping = hopProgress >= 0 && hopProgress < 1 ? Math.sin(Math.PI * hopProgress) : 0
 
-    // While it holds its screen up to be read, Rotom keeps nearly still.
+    // Keep nearly still while being read
     steady.current += ((presenting ? 1 : 0) - steady.current) * Math.min(1, delta * 4)
     const drift = (1 - steady.current * 0.8) * awake
-    // It may still bob, but it must not tilt: the screen has to stay square to be read.
+    // Bob but never tilt while being read
     const turn = (1 - steady.current * 0.97) * awake
 
     const calm = reducedMotion ? 0.2 : 1
     const shake = emotion === 'ERROR' ? errorShake(since) * calm : 0
-    // Two unrelated frequencies multiplied: an irregular electrical flicker.
+    // Two frequencies multiplied for a flicker
     const flicker = 0.5 + 0.5 * Math.sin(t * 31) * Math.sin(t * 17.3)
-    // Scanning and starting up share the same electric jitter.
+    // Scanning and startup share the jitter
     const charge = Math.min(1, w.SCANNING * awake + booting)
 
-    // IDLE: a slow float with a lazy tilt.
+    // Idle float with a lazy tilt
     const idleY = Math.sin(t * 2) * 0.15 * drift
     const idleTilt = Math.sin(t * 0.9 + 1) * 0.07 * turn
-    // SCANNING: fast, small, never-repeating jitter on every axis.
+    // Scanning jitter
     const jitterX = (Math.sin(t * 61) * 0.022 + Math.sin(t * 97) * 0.014) * calm
     const jitterY = (Math.sin(t * 71) * 0.02 + Math.sin(t * 113) * 0.012) * calm
     const tremor = Math.sin(t * 53) * 0.03 * calm
-    // SUCCESS: after the lunge, a higher, bouncier float.
+    // Success bouncy float
     const joyY = (0.06 + Math.sin(t * 3.2) * 0.18) * drift
     const joyTilt = Math.sin(t * 1.6) * 0.09 * turn
-    // ERROR: violent left-right shake, then a slump.
+    // Error shake then slump
     const shakeX = Math.sin(t * 40) * 0.1 * shake
-    // ASLEEP: hanging low, nodding forward, breathing slowly.
+    // Asleep hanging low and nodding
     const sleepY = -0.34 + Math.sin(t * 0.9) * 0.035
 
-    // Glance toward the pointer when relaxed and not being read.
+    // Glance at the pointer when relaxed
     const attention = (w.IDLE + w.SUCCESS * 0.6) * turn
     look.current.yaw += (MathUtils.clamp(lookTarget.x, -1, 1) * 0.3 * attention - look.current.yaw) * Math.min(1, delta * 4)
     look.current.pitch += (MathUtils.clamp(-lookTarget.y, -1, 1) * 0.16 * attention - look.current.pitch) * Math.min(1, delta * 4)
 
-    // SUCCESS one-shot: lunge at the viewer while spinning once, then settle.
+    // Success lunge and spin
     let lunge = 0
     let spin = 0
     let pop = 1
@@ -542,17 +524,15 @@ function RotomRig({ parts, custom, emotion, speaking, reducedMotion, presenting,
       )
       root.current.scale.setScalar(pop + hopping * 0.05)
 
-      // Is the screen turned toward the camera?
+      // Screen facing the camera
       root.current.getWorldDirection(forward)
       root.current.getWorldPosition(worldPosition)
       facing.current = forward.dot(towardCamera.copy(state.camera.position).sub(worldPosition).normalize()) > 0.2
     }
-    // Breathing: quick and shallow awake, slow and deep asleep.
+    // Breathing, fast awake and slow asleep
     if (body.current) body.current.scale.set(1, 1 + Math.sin(t * 2) * 0.01 * (w.IDLE + w.SUCCESS) * drift + Math.sin(t * 0.9) * 0.014 * asleep, 1)
 
-    // Arms. At rest they are held out, paddles a little raised, as in the
-    // anime. Idle sways them, scanning lifts and trembles them, success throws
-    // them up, error and sleep let them hang.
+    // Arms held out at rest, sway idle, tremble scanning, raised on success, hanging on error and sleep
     const arm = (phase: number) =>
       awake *
         (w.IDLE * Math.sin(t * 2 + phase) * 0.1 +
@@ -575,7 +555,7 @@ function RotomRig({ parts, custom, emotion, speaking, reducedMotion, presenting,
         awake * (w.IDLE * Math.sin(t * 1.7) * 0.05 + w.SUCCESS * Math.sin(t * 11) * 0.09 + w.ERROR * 0.2) + charge * Math.sin(t * 51) * 0.05 * calm + asleep * 0.14
     }
 
-    // The glow of the Rotom inside takes the emotion's colour. Asleep, there is none.
+    // Inner glow in the emotion colour, none asleep
     mood.lerp(moodTarget.set(EMOTION_COLOR[emotion]), 1 - Math.exp(-delta * 8))
     const alarm = Math.sin(t * 12) > 0 ? 1 : 0.15
     ;(plasmaAura.uniforms.color.value as Color).copy(mood)
@@ -583,7 +563,7 @@ function RotomRig({ parts, custom, emotion, speaking, reducedMotion, presenting,
       awake * (w.IDLE * (0.3 + 0.1 * Math.sin(t * 2)) + w.SCANNING * (1.5 + 1.3 * flicker) + w.SUCCESS * (0.9 + 0.25 * Math.sin(t * 8)) + w.ERROR * 1.4 * alarm) +
       booting * (0.6 + 1.6 * flicker) +
       hopping * 0.8
-    // The screen's white picks up a breath of that colour when something is happening.
+    // Screen tint while active
     materials.screen.color.copy(SCREEN_WHITE).lerp(mood, 0.14 * charge * (0.5 + flicker) + 0.1 * w.ERROR * alarm)
   })
 
@@ -598,7 +578,7 @@ function RotomRig({ parts, custom, emotion, speaking, reducedMotion, presenting,
   return (
     <group
       ref={root}
-      // A click that was not the end of a drag is a poke.
+      // A click that is not a drag is a poke
       onClick={(event) => {
         if (event.delta > 4 || !onPoke) return
         event.stopPropagation()
@@ -625,7 +605,7 @@ function RotomRig({ parts, custom, emotion, speaking, reducedMotion, presenting,
           </>
         )}
 
-        {/* A missing face image must not take the whole body down with it. */}
+        {/* A missing face image must not break the body */}
         <AssetBoundary fallback={null}>
           <Suspense fallback={null}>
             <Face emotion={emotion} power={power} speaking={speaking} grinning={grinning} cheer={cheer} screenBusy={screen.visible} />
@@ -640,12 +620,9 @@ function RotomRig({ parts, custom, emotion, speaking, reducedMotion, presenting,
   )
 }
 
-// ------------------------------------------------------------ sources for the body
+// Body sources
 
-/**
- * Someone dropped a different model in place of rotom_device.glb. Cel-shade it
- * and scale it to Rotom's height; the face and screen are laid over its front.
- */
+/** Custom model in place of the GLB, cel shaded and scaled to Rotom size */
 function adoptForeignModel(scene: Object3D): Object3D {
   const convert = (material: Material) => {
     const source = material as MeshStandardMaterial
@@ -663,12 +640,12 @@ function adoptForeignModel(scene: Object3D): Object3D {
   const center = box.getCenter(new Vector3())
   const scale = 2.6 / Math.max(size.y, 1e-4)
   scene.scale.setScalar(scale)
-  // Sit its front face where Rotom's own would be.
+  // Put its front where Rotom front would be
   scene.position.set(-center.x * scale, -center.y * scale, ROTOM.frontZ - box.max.z * scale)
   return scene
 }
 
-/** The model file, when it loads. */
+/** The GLB body */
 function RotomFromAsset(props: RotomModelProps) {
   const gltf = useGLTF(ROTOM_ASSET_URL)
 
@@ -683,7 +660,7 @@ function RotomFromAsset(props: RotomModelProps) {
   return <RotomRig {...props} {...prepared} />
 }
 
-/** The same body built from code, for when the model file is missing or broken. */
+/** Code built body, fallback when the GLB is missing */
 function RotomFromPrimitives(props: RotomModelProps) {
   const parts = useMemo(() => buildRotomGeometries(), [])
   return <RotomRig {...props} parts={parts} />
@@ -705,12 +682,7 @@ class AssetBoundary extends Component<{ fallback: ReactNode; children: ReactNode
   }
 }
 
-/**
- * Rotom Dex. Loads its body from /assets/rotom_device.glb and, if that file is
- * missing, builds the same body from Three.js primitives. Either way the
- * emotion engine in RotomRig animates it, swaps its face, and lays the
- * interface onto its screen.
- */
+/** Rotom Dex. Loads the GLB or falls back to a code built body */
 export function RotomModel(props: RotomModelProps) {
   return (
     <AssetBoundary fallback={<RotomFromPrimitives {...props} />}>

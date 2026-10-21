@@ -1,4 +1,4 @@
-// Battle knowledge: moves, abilities and element types.
+// Moves, abilities and types
 import { article, cleanText, english, exclaim, fetchJson, generationLabel, idFromUrl, itemArtwork, listWords, pokemonSprite, titleCase, type Localized, type NamedResource, type PagedList } from '../lib/pokeapi'
 import { isTypeName, pokemonLabel, TYPE_NAMES, type TypeName } from '../lib/types'
 import { AbilityIcon, MoveIcon, TypeIcon } from './icons'
@@ -6,7 +6,7 @@ import type { Databank, DexEntry, EntryChip, EntryGroup } from './types'
 
 const NATIONAL_DEX_SIZE = 1025
 
-/** Chips for a list of Pokémon resources, keeping only real species (ids above 10000 are alternate forms). */
+/** Chips for Pokémon resources, skipping alternate forms above id 10000 */
 function pokemonChips(resources: NamedResource[], first: number): { chips: EntryChip[]; first: number } {
   const species = resources.filter((pokemon) => idFromUrl(pokemon.url) <= NATIONAL_DEX_SIZE)
   return {
@@ -19,7 +19,7 @@ function pokemonChips(resources: NamedResource[], first: number): { chips: Entry
   }
 }
 
-// ------------------------------------------------------------ Moves
+// Moves
 
 interface ApiMove {
   id: number
@@ -83,7 +83,6 @@ export const movesDatabank: Databank = {
   label: 'Moves',
   singular: 'move',
   blurb: 'Power, accuracy, effects and who learns them',
-  // A Black Belt, the item fighters wear to hit harder.
   art: [itemArtwork('black-belt')],
   icon: MoveIcon,
   hue: '#3a9bf4',
@@ -94,7 +93,7 @@ export const movesDatabank: Databank = {
   loadEntry: async (key, signal) => moveToEntry(await fetchJson<ApiMove>(`move/${key}`, signal)),
 }
 
-// ------------------------------------------------------------ Abilities
+// Abilities
 
 interface ApiAbility {
   id: number
@@ -150,7 +149,6 @@ export const abilitiesDatabank: Databank = {
   label: 'Abilities',
   singular: 'Ability',
   blurb: 'What each Ability does and who has it',
-  // A Life Orb, humming with a power of its own.
   art: [itemArtwork('life-orb')],
   icon: AbilityIcon,
   hue: '#f2c81e',
@@ -161,7 +159,7 @@ export const abilitiesDatabank: Databank = {
   loadEntry: async (key, signal) => abilityToEntry(await fetchJson<ApiAbility>(`ability/${key}`, signal)),
 }
 
-// ------------------------------------------------------------ Types
+// Types
 
 interface ApiType {
   id: number
@@ -228,13 +226,12 @@ export const typesDatabank: Databank = {
   label: 'Types',
   singular: 'type',
   blurb: 'All 18 elements and how they match up',
-  // The Fire, Water and Grass Gems.
   art: [itemArtwork('fire-gem'), itemArtwork('water-gem'), itemArtwork('grass-gem')],
   icon: TypeIcon,
   hue: '#3fc79a',
   placeholder: 'Electric',
   source: 'PokéAPI',
-  // The eighteen battle types never change, so the list needs no request.
+  // The eighteen types are fixed, so no request is needed
   loadIndex: async () => TYPE_NAMES.map((type: TypeName) => ({ key: type, label: titleCase(type), type })),
   loadEntry: async (key, signal) => typeToEntry(await fetchJson<ApiType>(`type/${key.replace(/-type$/, '')}`, signal)),
 }

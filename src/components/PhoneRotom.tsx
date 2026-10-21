@@ -16,26 +16,26 @@ interface PhoneRotomProps {
   state: HudState
   actions: HudActions
   searchRef: RefObject<HTMLInputElement | null>
-  /** True while the display shows data (or a power screen) instead of Rotom's face. */
+  /** True while the display shows data instead of the face */
   screenVisible: boolean
   grinning: boolean
-  /** Counts cheers; each new value makes Rotom hop with its eyes squeezed shut. */
+  /** Cheer counter, each change makes Rotom hop */
   cheer: number
-  /** Counts lookups, so a repeated success still gets its jump. */
+  /** Lookup counter so repeat successes still jump */
   scanCount: number
   reducedMotion: boolean
   queryClient: QueryClient
 }
 
 const SCREEN_TOP = ROTOM.screen.y + ROTOM.screen.height / 2
-/** The little jump Rotom gives for a cheer, a find, or the moment it finishes starting up. */
+/** Hop for a cheer, a find or finishing startup */
 const JUMP: Keyframe[] = [{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-14px) scale(1.025)', offset: 0.4 }, { transform: 'translateY(0) scale(1)' }]
 const JUMP_TIMING: KeyframeAnimationOptions = { duration: 420, easing: 'cubic-bezier(0.3, 0, 0.3, 1)' }
 
-/** How far a finger has to travel before a drag counts as a swipe. */
+/** Drag distance that counts as a swipe */
 const SWIPE_DISTANCE = 26
 
-/** The Poké Ball that serves as the phone's home key. */
+/** Poké Ball home key */
 function PokeBall({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
@@ -47,30 +47,21 @@ function PokeBall({ className }: { className?: string }) {
   )
 }
 
-/**
- * Rotom's phone form. A whole Rotom Dex will not fit on a phone, so here the
- * phone is the Rotom: a red body edge to edge, its eyes at the top hanging
- * over the display, and on the display the same face and the same menus as
- * the Rotom Dex, with its text box floating over the foot of it. It is worked like a phone: asleep it is a dark screen you
- * tap, with a power switch on its rim; awake, a bar of soft keys runs along
- * the bottom, and its Poké Ball home key (or a swipe up) slides the scan
- * controls into view.
- */
+/** Rotom phone form. The phone is the Rotom, eyes on top, same menus and text box.
+    Tap to wake, soft keys at the bottom, home key or swipe up opens the controls */
 export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning, cheer, scanCount, reducedMotion, queryClient }: PhoneRotomProps) {
   const { emotion, power } = state
   const viewport = useWindowSize()
-  // On a phone it fills the display. Chosen on a bigger screen, it stands in the middle at phone size.
+  // Fills a phone, centered at phone size on bigger screens
   const framed = state.canSwitchForm
   const width = framed ? Math.min(viewport.width - 24, 430, Math.round((viewport.height - 24) * 0.5)) : viewport.width
   const height = framed ? Math.min(viewport.height - 24, 900) : viewport.height
 
-  // One model unit, in pixels. The eyes use the same artwork and proportions
-  // as the Rotom Dex, scaled so the pair spans most of the phone's width.
+  // One model unit in pixels, eyes span most of the width
   const unit = (width * 1.15) / ROTOM.eyes.width
   const bezel = Math.max(8, Math.round(width * 0.03))
   const overlap = (SCREEN_TOP - (ROTOM.eye.y - ROTOM.eye.radiusY)) * unit
-  // Opened from the home screen it runs full screen, under the phone's status
-  // bar and notch: the red forehead grows by that much, so the eyes stay clear.
+  // Full screen mode grows the forehead to clear the notch
   const notchProbe = useRef<HTMLDivElement>(null)
   const notch = useElementHeight(notchProbe)
   const forehead = Math.round(ROTOM.eye.radiusY * 2 * unit - overlap + 0.09 * unit) + notch
@@ -80,7 +71,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
   const frame = useRef<HTMLDivElement>(null)
   const display = useRef<HTMLDivElement>(null)
   const displayHeight = useElementHeight(display)
-  // What is listed on the display can scroll clear of the text box floating over its foot.
+  // Let the list scroll clear of the text box
   const talk = useRef<HTMLDivElement>(null)
   const talkHeight = useElementHeight(talk)
   const eyes = useRef<HTMLDivElement>(null)
@@ -90,13 +81,12 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
   const awake = power === 'awake'
   const faceShowing = awake && !screenVisible
 
-  // ---------------------------------------------------------- the control sheet
+  // Control sheet
 
   const [sheetWanted, setSheetWanted] = useState(false)
   const sheetOpen = awake && sheetWanted
 
-  // Every control that sends Rotom off to do something also puts the sheet
-  // away, so the reaction and the result are in view.
+  // Controls that start an action also close the sheet
   const sheetActions: HudActions = useMemo(() => {
     const thenClose =
       (act: () => void) =>
@@ -108,9 +98,9 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
     return { ...actions, submit: thenClose(actions.submit), prev: thenClose(actions.prev), next: thenClose(actions.next), random: thenClose(actions.random), openMenu: thenClose(actions.openMenu) }
   }, [actions, searchRef])
 
-  // One finger, one swipe: these handlers turn a vertical drag into `up` or `down`.
+  // Turns a vertical drag into up or down
   const drag = useRef<{ id: number; y: number } | null>(null)
-  // (`hold` keeps the drag with a small target, such as the sheet's handle, once the finger has left it.)
+  // Hold keeps the drag on small targets after the finger leaves
   const swipe = (up?: () => void, down?: () => void, hold = false) => ({
     onPointerDown: (event: ReactPointerEvent<HTMLElement>) => {
       drag.current = { id: event.pointerId, y: event.clientY }
@@ -136,10 +126,9 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
     },
   })
 
-  // ---------------------------------------------------------- expressions
+  // Expressions
 
-  // The expression engine: the same choices the Rotom Dex makes, applied to
-  // images and drawings instead of textures.
+  // Same expression logic as the Rotom Dex
   const live = useRef({ emotion, power, speaking: state.voice.speaking, grinning, cheer })
   useEffect(() => {
     live.current = { emotion, power, speaking: state.voice.speaking, grinning, cheer }
@@ -175,7 +164,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
     return () => cancelAnimationFrame(frame)
   }, [])
 
-  // The eyes drift toward wherever the screen was last touched.
+  // Eyes drift to the last touch
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
       if (!eyes.current) return
@@ -192,11 +181,9 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
     }
   }, [unit])
 
-  // ---------------------------------------------------------- body language
+  // Body language
 
-  // The phone is the screen in your hand, not an object in space, so unlike
-  // the Rotom Dex it never spins. SUCCESS is a little jump; ERROR a hard
-  // side-to-side shake. Both are one-shots fired as the emotion arrives.
+  // Never spins. Success jumps, error shakes
   useEffect(() => {
     const body = frame.current
     if (!body || reducedMotion || power !== 'awake') return
@@ -208,7 +195,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
     }
   }, [emotion, scanCount, power, reducedMotion])
 
-  // A cheer, or the moment it finishes starting up: a little jump.
+  // Hop on cheer or startup
   const hopped = useRef({ cheer, power })
   useEffect(() => {
     const jump = hopped.current.cheer !== cheer || (hopped.current.power === 'waking' && power === 'awake')
@@ -219,8 +206,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
 
   const mood = awake || power === 'waking' ? EMOTION_COLOR[emotion] : '#5b6b74'
 
-  // Rotom's face, drawn over the dome and the display. Positions are in
-  // pixels from the top-left corner of the dome's row.
+  // Face positions in pixels from the dome row corner
   const faceHeight = domeHeight + displayHeight
   const centre = screenWidth / 2
   const headY = domeHeight + (SCREEN_TOP + 0.16) * unit
@@ -233,17 +219,17 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
       <div ref={notchProbe} className="phone-notch" aria-hidden="true" />
       <div ref={frame} className="phone-frame" style={framed ? { width, height } : undefined}>
         <div className="phone-body" style={{ '--talk': `${talkHeight + 16}px` } as CSSProperties}>
-          {/* The forehead: tapping it pokes Rotom (or wakes it). */}
+          {/* Forehead tap pokes or wakes Rotom */}
           <button type="button" className="absolute inset-x-0 top-0 border-0 bg-transparent" style={{ height: forehead }} onClick={actions.poke} aria-label={awake ? 'Poke Rotom' : 'Wake Rotom'} />
 
-          {/* The dark dome between the eyes, standing on the display's top edge. */}
+          {/* Dark dome between the eyes */}
           <div
             className="pointer-events-none absolute"
             style={{ left: '50%', top: forehead - domeHeight, width: ROTOM.brow.halfWidth * 2 * unit, height: domeHeight + 2, translate: '-50% 0', background: FACE_BROW, borderRadius: '50% 50% 0 0 / 100% 100% 0 0' }}
             aria-hidden="true"
           />
 
-          {/* Asleep it is powered on with a press, never a swipe: only a press lets the browser play Rotom's greeting on time. */}
+          {/* Wake by press only so the browser allows the greeting audio */}
           <div className="phone-screen" style={screenBox}>
             <div ref={display} className="phone-display" onClick={faceShowing ? actions.poke : undefined}>
               <div className="absolute inset-0" style={{ opacity: screenVisible ? 1 : 0, pointerEvents: screenVisible ? 'auto' : 'none', transition: screenVisible ? 'opacity 220ms ease-out' : 'none' }} aria-hidden={!screenVisible}>
@@ -252,7 +238,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
             </div>
 
             {awake && (
-              // The soft keys. Swiping up from anywhere on the bar opens the controls too.
+              // Soft keys, swipe up on the bar opens the controls
               <nav className="phone-nav" aria-label="Rotom Phone keys" {...swipe(() => setSheetWanted(true))}>
                 <button type="button" className="phone-softkey" onClick={actions.back} disabled={nothingToGoBackTo}>
                   <ChevronLeft size={22} strokeWidth={3.4} />
@@ -269,7 +255,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
             )}
           </div>
 
-          {/* Rotom's face: its head rises out of the display into the dome. */}
+          {/* Face rising from the display into the dome */}
           <svg
             className="pointer-events-none absolute"
             style={{ left: bezel, top: forehead - domeHeight, visibility: faceShowing ? 'visible' : 'hidden' }}
@@ -285,7 +271,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
               </clipPath>
             </defs>
             <g clipPath="url(#phone-display-clip)">
-              {/* The tail, trailing to the bottom-right corner. */}
+              {/* Tail */}
               <path d={`M${centre + 0.3 * unit} ${headY + 0.28 * unit} L${screenWidth * 0.96} ${faceHeight + 0.2 * unit}`} stroke={FACE_SKIN} strokeWidth={0.3 * unit} strokeLinecap="round" />
               <ellipse cx={centre} cy={headY} rx={0.66 * unit} ry={0.5 * unit} fill={FACE_SKIN} />
               {FACE_KEYS.map((key) => (
@@ -302,8 +288,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
             </g>
           </svg>
 
-          {/* Rotom's text box floats over the foot of the display, so opening or
-              closing it never moves what is on the display. */}
+          {/* Floating text box so the display never moves */}
           <div ref={talk} className="phone-talk" style={{ left: bezel + 8, right: bezel + 8 }}>
             <DialogueBox
               text={state.line}
@@ -314,9 +299,9 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
             />
           </div>
 
-          {/* The scan controls: a sheet that slides up over the display. */}
+          {/* Scan controls sheet */}
           <div className="phone-overlay" style={screenBox}>
-            {/* While a search is being typed its results must stay readable, so the scrim clears. */}
+            {/* Clear the scrim while searching */}
             <div className="phone-scrim" data-open={sheetOpen} data-clear={state.view === 'search'} onClick={() => setSheetWanted(false)} aria-hidden="true" />
             <div id="phone-sheet" className="phone-sheet" data-open={sheetOpen} role="dialog" aria-label="Scan controls" inert={!sheetOpen}>
               <button type="button" className="phone-grip" onClick={() => setSheetWanted(false)} aria-label="Put the controls away" {...swipe(undefined, () => setSheetWanted(false), true)}>
@@ -326,7 +311,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
             </div>
           </div>
 
-          {/* The eyes: one image per expression, stacked, only one showing. */}
+          {/* Eyes, one image per expression */}
           <div ref={eyes} className="pointer-events-none absolute transition-[translate] duration-200" style={{ left: '50%', top: forehead - (ROTOM.eyes.y + ROTOM.eyes.height / 2 - SCREEN_TOP) * unit, width: ROTOM.eyes.width * unit, height: ROTOM.eyes.height * unit, marginLeft: (-ROTOM.eyes.width * unit) / 2 }} aria-hidden="true">
             {EYE_KEYS.map((key) => (
               <img
@@ -343,7 +328,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
             ))}
           </div>
 
-          {/* The chin: Rotom's state, spelled out, and its power switch. */}
+          {/* Chin with the state and power switch */}
           <footer className="phone-chin" style={{ paddingInline: bezel + 4 }}>
             <StatusLamp emotion={emotion} power={power} />
             <span className="flex items-center gap-2">
@@ -352,7 +337,7 @@ export function PhoneRotom({ state, actions, searchRef, screenVisible, grinning,
                   <TabletSmartphone size={15} strokeWidth={2.8} />
                 </button>
               )}
-              {/* One power switch, as on a phone: it wakes Rotom and puts it to sleep. */}
+              {/* Power switch */}
               <button
                 type="button"
                 onClick={() => {

@@ -4,15 +4,12 @@ import { TYPE_COLORS, TYPE_IDS, TYPE_NEEDS_LIGHT_TEXT, type TypeName } from '../
 
 interface TypeLabelProps {
   type: TypeName
-  /** Extra words before the type name, e.g. "Natural Gift". */
+  /** Extra words before the type name, like Natural Gift */
   prefix?: string
   onClick?: () => void
 }
 
-/**
- * An element type shown with the games' own label artwork. If
- * that image cannot be fetched, a plain tag in the type's game colour stands in.
- */
+/** Type label artwork, with a plain coloured tag as fallback */
 export function TypeLabel({ type, prefix, onClick }: TypeLabelProps) {
   const [imageBroken, setImageBroken] = useState(false)
 

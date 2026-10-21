@@ -1,5 +1,4 @@
-// Copies the Draco decoder that ships with three.js into public/draco so GLB
-// decoding works without calling out to a third-party CDN.
+// Copies the three.js Draco decoder into public so no CDN is needed
 import { cp, mkdir } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

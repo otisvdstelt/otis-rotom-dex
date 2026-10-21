@@ -1,6 +1,4 @@
-// Region lore that PokeAPI does not carry: gym badges, their leaders, the
-// partner Pokémon trainers choose from, and a line of introduction. Maintained
-// by hand from the main-series games; extend it here when a new region arrives.
+// Hand kept region lore PokeAPI lacks, badges, leaders, partners and intros
 import type { TypeName } from '../../lib/types'
 
 export interface GymBadge {
@@ -8,17 +6,17 @@ export interface GymBadge {
   leader: string
   place: string
   type: TypeName
-  /** Number of this badge's artwork in PokeAPI's sprite set; absent where there is no badge to show. */
+  /** Badge artwork number in PokeAPI sprites, absent when there is no badge */
   sprite?: number
 }
 
 export interface RegionLore {
   intro: string
-  /** PokeAPI slugs of the partner Pokémon offered at the start of the journey. */
+  /** Partner Pokémon slugs */
   starters: string[]
-  /** What this region calls its challenge: gyms elsewhere, trials in Alola, nobles in Hisui. */
+  /** Name of the challenge, like gyms, trials or nobles */
   challenge: { title: string; badges: GymBadge[] } | null
-  /** Notable Pokémon tied to the region's story, as PokeAPI slugs. */
+  /** Story Pokémon slugs */
   notable?: { title: string; pokemon: string[] }
 }
 
@@ -198,7 +196,7 @@ export const REGION_LORE: Record<string, RegionLore> = {
   },
 }
 
-// Artwork numbers in PokeAPI's badge sprites, in the same order as each region's list above.
+// Badge artwork numbers, same order as each region list above
 const BADGE_SPRITES: Record<string, number[]> = {
   kanto: [1, 2, 3, 4, 5, 6, 7, 8],
   johto: [9, 10, 11, 12, 13, 14, 15, 16],

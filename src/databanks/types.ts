@@ -1,34 +1,31 @@
-// The shape every databank speaks. A databank is one section of the Rotom Dex
-// (Pokémon, Berries, Moves...). To add a new one, write a module that exports a
-// `Databank` and register it in registry.ts; the HUD, search, Prev/Next, random
-// scan and Rotom's speech all work from these few fields.
+// Shared databank shape. Export a Databank and register it in registry.ts
 import type { LucideIcon } from 'lucide-react'
 import type { DatabankIcon } from './icons'
 import type { TypeName } from '../lib/types'
 
 export type SectionId = 'pokemon' | 'berries' | 'treats' | 'items' | 'balls' | 'moves' | 'abilities' | 'types' | 'regions' | 'natures'
 
-/** A pointer to another entry, so details can link across databanks. */
+/** Link to another entry, across databanks */
 export interface EntryLink {
   section: SectionId
   key: string
 }
 
-/** One row of a databank's list of everything it holds. */
+/** One row of a databank list */
 export interface IndexItem {
-  /** PokeAPI slug: what gets looked up. */
+  /** PokeAPI slug to look up */
   key: string
   label: string
   number?: number
   image?: string
-  /** Small secondary text: a category, a generation. */
+  /** Small secondary text */
   hint?: string
   type?: TypeName
 }
 
 export interface EntryTag {
   label: string
-  /** Paints the tag in that element type's colour. */
+  /** Colours the tag by type */
   type?: TypeName
   link?: EntryLink
 }
@@ -37,13 +34,13 @@ export interface EntryMeter {
   label: string
   value: number
   max: number
-  /** Shown instead of the number, e.g. "—" for a move with no power. */
+  /** Shown instead of the number */
   display?: string
 }
 
 export interface EntryMeters {
   title: string
-  /** How to colour the bars: by base-stat tiers, or one flat colour. */
+  /** Bar colouring, stat tiers or flat */
   scale: 'stat' | 'flat'
   items: EntryMeter[]
   total?: { label: string; value: number }
@@ -65,42 +62,38 @@ export interface EntryChip {
 
 export interface EntryGroup {
   title: string
-  /** "chips" for short links, "badges" for gym badges with an emblem, "types" for type tags. */
+  /** Chips, badges or type tags */
   layout: 'chips' | 'badges' | 'types'
-  /** Every chip in the group. */
+  /** All chips in the group */
   chips: EntryChip[]
-  /** How many are shown to begin with; the rest wait behind "and N more". Omit to show them all. */
+  /** Chips shown at first, the rest behind and N more */
   first?: number
-  /** Shown when there are no chips. */
+  /** Shown when empty */
   empty?: string
 }
 
-/** Everything the details panel and Rotom's voice need to present one entry. */
+/** Everything needed to present one entry */
 export interface DexEntry {
   section: SectionId
   key: string
   number: number | null
   name: string
-  /** One line under the name: a genus, a category. */
+  /** Line under the name */
   subtitle?: string
   image: { src: string; kind: 'artwork' | 'sprite' } | null
   tags: EntryTag[]
-  /** The entry's description. The text box carries it, so the panel does not repeat it unless `showSummary` is set. */
+  /** Description, shown in the text box unless showSummary is set */
   summary: string
-  /** A second paragraph the panel always shows, e.g. the exact battle effect. */
+  /** Extra paragraph always shown */
   detail?: string
   meters: EntryMeters | null
   facts: EntryFact[]
   groups: EntryGroup[]
-  /**
-   * The entry as the text box gives it, after Rotom's recorded opener ("Pokémon
-   * data analyzed! Here's what I found-roto!"): the name, what it is, its
-   * description. It is shown, not spoken.
-   */
+  /** Text box entry after the spoken opener, shown not spoken */
   speech: string
-  /** The same picture in its shiny colours (Pokémon only, and only where one exists). */
+  /** Shiny artwork, Pokémon only */
   shinyImage?: string | null
-  /** Pokémon only. */
+  /** Pokémon only */
   speciesNumber?: number
   evolutionChainUrl?: string | null
   cry?: string | null
@@ -108,29 +101,26 @@ export interface DexEntry {
 
 export interface Databank {
   id: SectionId
-  /** Plural name for menus: "Berries". */
+  /** Plural menu name */
   label: string
-  /** Singular noun for sentences: "Berry". */
+  /** Singular noun */
   singular: string
-  /** One line for the launcher. */
+  /** Launcher line */
   blurb: string
-  /**
-   * Official artwork shown as the databank's menu icon: one picture, or a
-   * small group of them.
-   */
+  /** Menu icon artwork, one or a few images */
   art: string[]
-  /** A drawing that stands in when that artwork cannot be fetched. */
+  /** Fallback drawing */
   icon: DatabankIcon
-  /** The tile's colour in the launcher. */
+  /** Launcher tile colour */
   hue: string
   placeholder: string
-  /** Where the data comes from, shown in the panel footer. */
+  /** Data source, shown in the footer */
   source: string
   loadIndex: (signal?: AbortSignal) => Promise<IndexItem[]>
   loadEntry: (key: string, signal?: AbortSignal) => Promise<DexEntry>
 }
 
-/** A databank that has a place in the menu but no data behind it yet. */
+/** Menu slot with no data yet */
 export interface PlannedDatabank {
   id: string
   label: string

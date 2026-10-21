@@ -4,14 +4,14 @@ import { eyeTextureUrl } from './textures'
 
 const base = import.meta.env.BASE_URL
 
-// Decode Draco with the copy in /public/draco instead of a third-party CDN.
+// Use the local Draco decoder instead of a CDN
 useGLTF.setDecoderPath(`${base}draco/`)
 
-/** Rotom Dex's body. Swap this file for another model and the app will still load it. */
+/** Rotom Dex body model */
 export const ROTOM_ASSET_URL = `${base}assets/rotom_device.glb`
 
-/** The eyes, one image per expression. */
+/** Eye images, one per expression */
 export const EYE_TEXTURES = Object.fromEntries(EYE_KEYS.map((key) => [key, eyeTextureUrl(key)])) as Record<EyeKey, string>
 
-/** Rotom's blue face and mouth as drawn on its screen, one image per expression. */
+/** Face and mouth images, one per expression */
 export const FACE_TEXTURES = Object.fromEntries(FACE_KEYS.map((key) => [key, `${base}textures/face_${key}.png`])) as Record<FaceKey, string>

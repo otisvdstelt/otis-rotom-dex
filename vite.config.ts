@@ -6,8 +6,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
-    // three.js + R3F + drei + postprocessing land in one lazily loaded chunk;
-    // the HUD paints from the small main chunk before it arrives.
+    // 3D libraries load in one lazy chunk so the HUD paints first
     chunkSizeWarningLimit: 1300,
   },
 })

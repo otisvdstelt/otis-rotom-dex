@@ -7,15 +7,11 @@ interface ControlDockProps {
   state: HudState
   actions: HudActions
   searchRef: RefObject<HTMLInputElement | null>
-  /** Leave out the glass tray, for when the keys already sit on a surface of their own. */
+  /** Hide the glass tray */
   bare?: boolean
 }
 
-/**
- * Rotom's controls. Asleep, there is one: the power key. Awake: the menu key,
- * a search field that looks through every databank, and three hardware keys. PREV and NEXT
- * step through the open databank; the dice key picks an entry at random.
- */
+/** Rotom controls. Asleep only power, awake menu, search, prev, next and dice */
 export function ControlDock({ state, actions, searchRef, bare = false }: ControlDockProps) {
   const tray = bare ? '' : 'glass p-3'
   const databank = DATABANKS[state.activeSection]

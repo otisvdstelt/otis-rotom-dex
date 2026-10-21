@@ -5,25 +5,21 @@ import { isTypeName, pokemonLabel, STAT_LABELS, type TypeName } from '../lib/typ
 import { PokemonIcon } from './icons'
 import type { Databank, DexEntry } from './types'
 
-/**
- * Where a stat meter reads as full. Only a handful of base stats in all the
- * games go higher (Blissey's HP reaches 255); scaling to those would leave
- * almost every other meter looking empty.
- */
+/** Stat meter maximum, higher stats are rare */
 const STAT_CEILING = 180
 
-/** PokeAPI numbers alternate forms from 10001; everything up to here is a species' ordinary form. */
+/** Ids above this are alternate forms */
 const FIRST_FORM_NUMBER = 10000
 
 const RANK_LABEL = { legendary: 'Legendary', mythical: 'Mythical', baby: 'Baby' } as const
 
-/** The entry as the text box gives it: "[Name]. A [Type] type Pokémon. [Description]!" */
+/** Text box line with name, type and description */
 function speech(pokemon: RotomPokemon): string {
   const types = pokemon.types.map(titleCase)
   return `${pokemon.name}. ${article(types[0])} ${listWords(types)} type Pokémon. ${exclaim(pokemon.description)}`
 }
 
-/** Turns the record from useRotomApi into the shape the details panel renders. */
+/** Maps the API record to the details panel shape */
 export function pokemonToEntry(pokemon: RotomPokemon): DexEntry {
   const types = pokemon.types.filter(isTypeName) as TypeName[]
   const total = pokemon.stats.reduce((sum, stat) => sum + stat.value, 0)
@@ -54,7 +50,7 @@ export function pokemonToEntry(pokemon: RotomPokemon): DexEntry {
       { label: 'First seen', value: pokemon.generation },
     ],
     groups: [
-      // Its other forms: Mega Evolutions, Gigantamax, regional forms and the like.
+      // Other forms like Mega, Gigantamax and regional
       ...(pokemon.forms.length > 1
         ? [
             {
@@ -90,15 +86,12 @@ export const pokemonDatabank: Databank = {
   label: 'Pokémon',
   singular: 'Pokémon',
   blurb: 'Every species and form, with stats, entry and family',
-  // Pikachu.
   art: [pokemonIllustration(25)],
   icon: PokemonIcon,
   hue: '#ff5a4d',
   placeholder: 'Pikachu or 25',
   source: 'PokéAPI',
-  // Every species in National Pokédex order, then every alternate form
-  // (Mega Evolutions, Gigantamax, regional forms…) under PokeAPI's own
-  // numbers, which start at 10001.
+  // Species in Pokédex order, then alternate forms from 10001
   loadIndex: async (signal) => {
     const [speciesList, pokemonList] = await Promise.all([fetchJson<PagedList>('pokemon-species?limit=3000', signal), fetchJson<PagedList>('pokemon?limit=3000', signal)])
     const species = speciesList.results.map((entry) => {

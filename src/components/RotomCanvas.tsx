@@ -14,16 +14,9 @@ import { RotomModel, type RotomScreen } from './RotomModel'
 import { Backdrop } from './three/Backdrop'
 import { PokeballLoader } from './three/PokeballLoader'
 
-// ------------------------------------------------------------ lighting
+// Lighting
 
-/**
- * The light of Rotom's screen. It rides on the body, takes the emotion's
- * colour and pulses in character: a slow amber breath when idle, a cyan
- * strobe while scanning, steady green on success, a red hazard blink on
- * error. Asleep it is a faint ember; starting up, it sputters. (It sits just
- * proud of the glass: a light placed inside the casing would only ever
- * illuminate the inside of it.)
- */
+/** Screen light in the emotion colour, pulsing per state. Sits just outside the glass */
 function EmotionLight({ emotion, power }: { emotion: RotomEmotion; power: RotomPower }) {
   const light = useRef<PointLight>(null)
   const target = useMemo(() => new Color(), [])
@@ -45,16 +38,16 @@ function EmotionLight({ emotion, power }: { emotion: RotomEmotion; power: RotomP
   return <pointLight ref={light} position={[0, ROTOM.screen.y + 0.4, ROTOM.frontZ + 0.9]} color={EMOTION_COLOR.IDLE} intensity={2.4} distance={7} decay={1.6} />
 }
 
-// ------------------------------------------------------------ camera
+// Camera
 
 const REST = {
-  // The wide shot sits a touch off-axis so the body reads as a solid object.
+  // Wide shot slightly off axis for depth
   wide: { theta: 0.14, phi: Math.PI / 2 - 0.05 },
-  // The close shot is dead square, so the screen's contents are undistorted.
+  // Close shot square so the screen is undistorted
   close: { theta: 0, phi: Math.PI / 2 },
 }
 
-// Scratch values for the camera move (there is one camera).
+// Scratch values for the camera move
 const spherical = new Spherical()
 const offset = new Vector3()
 
@@ -63,21 +56,17 @@ interface CameraRigProps {
   framing: Framing
 }
 
-/**
- * Moves the camera between the two shots. Each change of shot is one eased
- * move; once it lands (or the moment the user grabs the controls) the orbit
- * is theirs: all the way round Rotom, but never over the top or underneath.
- */
+/** Eases between shots, then hands orbit control to the user without flipping */
 function CameraRig({ shot, framing }: CameraRigProps) {
   const camera = useThree((s) => s.camera) as PerspectiveCamera
   const height = useThree((s) => s.size.height)
   const controls = useRef<OrbitControlsImpl>(null)
   const move = useRef({ active: true, snap: true })
 
-  // Distance at which one model unit covers the requested number of pixels.
+  // Distance where one model unit covers the wanted pixels
   const distanceFor = (pixelsPerUnit: number) => height / (2 * Math.tan(MathUtils.degToRad(CAMERA_FOV / 2)) * pixelsPerUnit)
   const goal = {
-    // In the close shot it is the screen plane, not the body centre, that must come out at 1:1.
+    // Close shot measures at the screen plane
     distance: distanceFor(framing[shot].pixelsPerUnit) + (shot === 'close' ? ROTOM.frontZ : 0),
     targetY: framing[shot].targetY,
     ...REST[shot],
@@ -85,7 +74,7 @@ function CameraRig({ shot, framing }: CameraRigProps) {
   const nearest = distanceFor(framing.close.pixelsPerUnit) * 0.8
   const farthest = distanceFor(framing.wide.pixelsPerUnit) * 1.4
 
-  // A new shot, or a resized window, starts a fresh move.
+  // New shot or resize starts a fresh move
   useEffect(() => {
     move.current.active = true
   }, [shot, goal.distance, goal.targetY])
@@ -129,16 +118,16 @@ function CameraRig({ shot, framing }: CameraRigProps) {
       zoomSpeed={0.6}
       minDistance={nearest}
       maxDistance={farthest}
-      // About 37° above and 23° below level: enough to peek, never enough to flip the view.
+      // Limit tilt so the view never flips
       minPolarAngle={Math.PI / 2 - 0.65}
       maxPolarAngle={Math.PI / 2 + 0.4}
     />
   )
 }
 
-// ------------------------------------------------------------ per-frame housekeeping
+// Per frame upkeep
 
-/** Keeps the line weights and Rotom's gaze in step with the canvas and pointer. */
+/** Keeps line widths and gaze in sync with canvas and pointer */
 function FrameSync() {
   const gl = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
@@ -170,7 +159,7 @@ function FrameSync() {
       lookTarget.y = 0
       return
     }
-    // Pointer position relative to Rotom's eyes on screen, in half-viewport units.
+    // Pointer offset from the eyes in half viewport units
     const rect = gl.domElement.getBoundingClientRect()
     projected.set(0, ROTOM.eye.y, 0).project(camera)
     const eyesX = rect.left + (projected.x * 0.5 + 0.5) * rect.width
@@ -181,40 +170,32 @@ function FrameSync() {
   return null
 }
 
-// ------------------------------------------------------------ the viewport
+// Viewport
 
 export interface RotomCanvasProps {
   emotion: RotomEmotion
   power: RotomPower
   speaking: boolean
-  /** Wear the big grin instead of the resting smile. */
+  /** Big grin instead of the resting smile */
   grinning: boolean
-  /** Counts cheers; each new value makes Rotom hop. */
+  /** Cheer counter, each change makes Rotom hop */
   cheer: number
   reducedMotion: boolean
-  /** Rotom was clicked or tapped. */
   onPoke: () => void
-  /** Which of the two camera shots to hold. */
+  /** Camera shot to hold */
   shot: Shot
   framing: Framing
-  /** What Rotom's screen displays. */
+  /** What the screen displays */
   screen: RotomScreen
 }
 
-/**
- * The 3D viewport: sky, lights, camera controls and Rotom. Rotom is wrapped in
- * Suspense, so a spinning Poké Ball holds the stage while its assets load.
- */
+/** 3D viewport with sky, lights, controls and Rotom, a Poké Ball shows while loading */
 export default function RotomCanvas({ emotion, power, speaking, grinning, cheer, reducedMotion, onPoke, shot, framing, screen }: RotomCanvasProps) {
   return (
     <Canvas shadows="percentage" flat dpr={[1, 2]} gl={{ antialias: false, powerPreference: 'high-performance' }} camera={{ fov: CAMERA_FOV, near: 0.4, far: 90, position: [2, 1.4, 16] }} style={{ touchAction: 'none' }}>
       <Backdrop emotion={emotion} power={power} />
 
-      {/*
-        Cel lighting, in three's physical units (a lit surface shows
-        albedo * light / PI). The cool ambient sets the shadow tone, the warm
-        key adds the lit band, and together they land on each part's true colour.
-      */}
+      {/* Cool ambient sets shadows, warm key adds the lit band */}
       <ambientLight color="#e4e6ff" intensity={Math.PI * 0.64} />
       <directionalLight color="#fff4dc" intensity={Math.PI * 0.42} position={[3.5, 6, 6]} castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-0.0006} shadow-normalBias={0.04}>
         <orthographicCamera attach="shadow-camera" args={[-5, 5, 5, -5, 1, 26]} />
@@ -229,7 +210,7 @@ export default function RotomCanvas({ emotion, power, speaking, grinning, cheer,
       <CameraRig shot={shot} framing={framing} />
       <FrameSync />
 
-      {/* Only values brighter than white bloom: the plasma aura and the sparks. */}
+      {/* Only values above white bloom */}
       <EffectComposer multisampling={4} enableNormalPass={false}>
         <Bloom mipmapBlur luminanceThreshold={1} luminanceSmoothing={0.03} intensity={0.85} radius={0.72} />
       </EffectComposer>

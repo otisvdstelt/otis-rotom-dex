@@ -2,11 +2,7 @@ import { useState } from 'react'
 import { DATABANK_LIST, PLANNED_DATABANKS } from '../../databanks/registry'
 import type { Databank, SectionId } from '../../databanks/types'
 
-/**
- * A databank's icon: its official artwork (one picture, or three gathered in
- * a cluster). If the artwork cannot be fetched, the databank's own drawing
- * stands in.
- */
+/** Databank icon artwork, one image or a cluster of three, with a drawing as fallback */
 function TileArt({ databank }: { databank: Databank }) {
   const [broken, setBroken] = useState(false)
   const Drawn = databank.icon
@@ -21,7 +17,7 @@ function TileArt({ databank }: { databank: Databank }) {
           alt=""
           onError={() => setBroken(true)}
           className="absolute size-[1.8em] object-contain drop-shadow-[0_0.06em_0_rgb(37_48_90/0.25)]"
-          // One on top, two beneath, like a little pile of gems.
+          // One on top, two beneath
           style={[{ left: '0.65em', top: '0.05em' }, { left: '0em', top: '1.2em' }, { left: '1.3em', top: '1.2em' }][n]}
         />
       ))}
@@ -29,11 +25,7 @@ function TileArt({ databank }: { databank: Databank }) {
   )
 }
 
-/**
- * Rotom Dex's home menu: one round icon per databank, each showing official
- * artwork of something from the Pokémon world, like the app icons on the games' menu screen, followed by the slots kept for databanks that are
- * not installed yet.
- */
+/** Home menu, one round icon per databank plus empty slots */
 export function ScreenMenu({ onOpen }: { onOpen: (section: SectionId) => void }) {
   return (
     <div className="p-[0.8em]">

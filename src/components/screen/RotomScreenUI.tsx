@@ -11,30 +11,17 @@ import { ScreenSearch } from './ScreenSearch'
 interface RotomScreenUIProps {
   state: HudState
   actions: HudActions
-  /** Pixel width of the screen. */
   width: number
-  /**
-   * Rotom's eyes hang over the top of the screen. The title bar is this deep,
-   * so nothing but its colour sits behind them, and its text keeps to `gap`,
-   * the clear width between the eyes.
-   */
+  /** Title bar text stays within this clear width between the eyes */
   titleBar: { height: number; gap: number }
-  /**
-   * The app's query cache. On the 3D Rotom Dex this interface is mounted in
-   * its own React root, so context from the main tree has to be handed in again.
-   */
+  /** Query cache, passed in because the 3D screen has its own React root */
   queryClient: QueryClient
 }
 
-/**
- * The interface on Rotom's own display: the menu of databanks, the list
- * inside one, or a single entry; and, before it is switched on, its sleeping
- * and start-up screens. Styled after the touch-screen menus of Pokémon Sun
- * and Moon, the games this Pokédex comes from.
- */
+/** UI on the Rotom display, menu, list, entry, sleep and startup screens */
 export function RotomScreenUI({ state, actions, width, titleBar, queryClient }: RotomScreenUIProps) {
   const databank = state.section ? DATABANKS[state.section] : null
-  // Type scales with the display, so the same layout works on a phone and a desktop.
+  // Type scales with the display
   const fontSize = Math.max(12.5, Math.min(17, width / 40))
 
   if (state.power !== 'awake') {
@@ -48,7 +35,7 @@ export function RotomScreenUI({ state, actions, width, titleBar, queryClient }: 
   const title = state.view === 'menu' ? 'Menu' : state.view === 'search' ? 'Search' : (databank?.label.split(' & ')[0] ?? '')
   const backLabel = state.view === 'entry' && databank ? databank.label.split(' & ')[0] : state.view === 'list' ? 'Menu' : 'Close'
   const count = state.index.items?.length
-  // Where the open entry sits in its databank, e.g. "25 / 1025".
+  // Position in the databank, like 25 of 1025
   const place = state.entry && state.index.items ? state.index.items.findIndex((item) => item.key === state.entry?.key) + 1 : 0
 
   return (
@@ -74,7 +61,7 @@ export function RotomScreenUI({ state, actions, width, titleBar, queryClient }: 
           </p>
         </div>
 
-        {/* Keyed, so every new screen starts at its top instead of inheriting the last one's scroll position. */}
+        {/* Keyed so each screen starts scrolled to the top */}
         <div key={`${state.view}:${state.section ?? ''}:${state.entry?.key ?? ''}`} className="dex-scroll">
           {state.view === 'menu' && <ScreenMenu onOpen={actions.openSection} />}
           {state.view === 'search' && <ScreenSearch search={state.search} query={state.input} onPick={actions.open} />}

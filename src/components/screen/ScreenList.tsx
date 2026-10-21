@@ -4,12 +4,12 @@ import { slugify } from '../../lib/pokeapi'
 import type { HudState } from '../hud/model'
 import { TypeLabel } from './TypeLabel'
 
-/** Rows added at a time. A long databank is drawn a batch at a time as you scroll down it, never all at once. */
+/** Rows drawn per batch while scrolling */
 const BATCH = 40
-/** How close to the bottom (in pixels) the list is scrolled before the next batch is drawn. */
+/** Distance from the bottom in pixels that loads the next batch */
 const LOAD_AHEAD = 600
 
-/** One tappable row: picture, number, name, and a tag at the end. */
+/** One tappable row */
 export function Row({ item, onPick }: { item: IndexItem; onPick: (key: string) => void }) {
   const [imageBroken, setImageBroken] = useState(false)
   return (
@@ -28,15 +28,12 @@ export function Row({ item, onPick }: { item: IndexItem; onPick: (key: string) =
 interface ScreenListProps {
   databank: Databank
   index: HudState['index']
-  /** The search field's text; narrows the list as it is typed. */
+  /** Search text that filters the list */
   filter: string
   onPick: (key: string) => void
 }
 
-/**
- * Everything a databank holds, narrowed live by the search field. Only the
- * first rows are drawn; more are added as the list is scrolled toward its end.
- */
+/** Databank list filtered by search, drawn in batches as you scroll */
 export function ScreenList({ databank, index, filter, onPick }: ScreenListProps) {
   const matches = useMemo(() => {
     const items = index.items ?? []
@@ -46,8 +43,7 @@ export function ScreenList({ databank, index, filter, onPick }: ScreenListProps)
     return items.filter((item) => item.key.includes(wanted) || slugify(item.label).includes(wanted))
   }, [index.items, filter])
 
-  // How many rows are drawn so far. A new list (another databank, another
-  // search) starts again from the first batch.
+  // Rows drawn so far, resets for a new list
   const [drawn, setDrawn] = useState({ list: matches, rows: BATCH })
   if (drawn.list !== matches) setDrawn({ list: matches, rows: BATCH })
   const rows = drawn.list === matches ? drawn.rows : BATCH
@@ -62,7 +58,7 @@ export function ScreenList({ databank, index, filter, onPick }: ScreenListProps)
       if (scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight > LOAD_AHEAD) return
       setDrawn((now) => (now.list === matches ? { list: matches, rows: now.rows + BATCH } : now))
     }
-    // Once now, in case what is drawn does not yet fill the screen; then on every scroll.
+    // Run once now in case the screen is not full, then on every scroll
     const frame = requestAnimationFrame(drawMore)
     scroller.addEventListener('scroll', drawMore, { passive: true })
     return () => {

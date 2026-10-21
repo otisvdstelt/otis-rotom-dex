@@ -23,7 +23,7 @@ export type TypeName = (typeof TYPE_NAMES)[number]
 
 export const isTypeName = (value: string): value is TypeName => (TYPE_NAMES as readonly string[]).includes(value)
 
-/** PokeAPI's numeric id for each type, which is how its type icons are filed. */
+/** PokeAPI type ids, used for the type icons */
 export const TYPE_IDS: Record<TypeName, number> = {
   normal: 1,
   fighting: 2,
@@ -45,7 +45,7 @@ export const TYPE_IDS: Record<TypeName, number> = {
   fairy: 18,
 }
 
-/** The colours the games use for each element type. */
+/** Game colours per type */
 export const TYPE_COLORS: Record<TypeName, string> = {
   normal: '#a8a77a',
   fire: '#ee8130',
@@ -67,7 +67,7 @@ export const TYPE_COLORS: Record<TypeName, string> = {
   fairy: '#d685ad',
 }
 
-/** Types whose colour is dark enough that the label needs white text to stay readable. */
+/** Dark types that need white text */
 export const TYPE_NEEDS_LIGHT_TEXT: ReadonlySet<TypeName> = new Set(['grass', 'fighting', 'poison', 'ghost', 'dragon', 'dark'])
 
 export const STAT_LABELS: Record<string, string> = {
@@ -79,7 +79,7 @@ export const STAT_LABELS: Record<string, string> = {
   speed: 'Speed',
 }
 
-/** PokeAPI's internal egg group names -> the names the games show. */
+/** PokeAPI egg group names to game names */
 export const EGG_GROUP_NAMES: Record<string, string> = {
   monster: 'Monster',
   water1: 'Water 1',
@@ -98,7 +98,7 @@ export const EGG_GROUP_NAMES: Record<string, string> = {
   'no-eggs': 'Undiscovered',
 }
 
-/** Names PokeAPI slugs cannot express with plain title-casing. */
+/** Names plain title casing gets wrong */
 export const SPECIAL_NAMES: Record<string, string> = {
   'mr-mime': 'Mr. Mime',
   'mime-jr': 'Mime Jr.',
@@ -120,7 +120,7 @@ export const SPECIAL_NAMES: Record<string, string> = {
   'chi-yu': 'Chi-Yu',
 }
 
-/** Display name for a Pokémon slug: "mr-mime" -> "Mr. Mime", "tapu-koko" -> "Tapu Koko". */
+/** Display name for a Pokémon slug, like Mr. Mime */
 export const pokemonLabel = (slug: string): string =>
   SPECIAL_NAMES[slug] ??
   slug

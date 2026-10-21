@@ -1,10 +1,6 @@
 import { AdditiveBlending, BackSide, Color, DataTexture, NearestFilter, RedFormat, ShaderMaterial, Vector2 } from 'three'
 
-/**
- * Three hard light bands instead of a smooth falloff. MeshToonMaterial looks
- * up `dot(normal, light)` remapped to 0..1 in this strip, so the texels are:
- * facing away, grazing away, grazing toward, facing the light.
- */
+/** Three hard light bands for the toon material */
 export const toonGradient = (() => {
   const texture = new DataTexture(new Uint8Array([0, 0, 150, 255]), 4, 1, RedFormat)
   texture.minFilter = NearestFilter
@@ -16,9 +12,7 @@ export const toonGradient = (() => {
 
 const resolution = new Vector2(1, 1)
 
-// Both effects below are inverted hulls: the model's back faces pushed outward
-// along the normal in clip space, so the line keeps a constant pixel width
-// however far away Rotom floats or however hard it shakes.
+// Inverted hulls pushed out in clip space, so lines keep a fixed pixel width
 const hullVertexShader = /* glsl */ `
   uniform float thickness;
   uniform vec2 resolution;
@@ -33,7 +27,7 @@ const hullVertexShader = /* glsl */ `
   }
 `
 
-/** The ink line round every part, as in the anime's linework. */
+/** Ink outline */
 export const inkOutline = new ShaderMaterial({
   name: 'InkOutline',
   side: BackSide,
@@ -51,11 +45,7 @@ export const inkOutline = new ShaderMaterial({
   `,
 })
 
-/**
- * The glow of the Rotom inside: a second, wider hull of pure light just
- * outside the ink line. Its colour and strength are set every frame by the
- * emotion engine; values above 1 are picked up by the bloom pass.
- */
+/** Outer glow hull, colour set every frame, values above 1 bloom */
 export const plasmaAura = new ShaderMaterial({
   name: 'PlasmaAura',
   side: BackSide,
@@ -78,7 +68,7 @@ export const plasmaAura = new ShaderMaterial({
   `,
 })
 
-/** Keeps both hulls a steady weight as the canvas resizes. Call once per frame. */
+/** Keeps hull widths steady on resize, call once per frame */
 export function setOutlineResolution(width: number, height: number) {
   resolution.set(width, height)
   const ink = Math.min(5, Math.max(2, Math.min(width, height) * 0.0036))

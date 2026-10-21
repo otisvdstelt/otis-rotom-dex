@@ -5,48 +5,35 @@ import { audio, sfx } from '../lib/sfx'
 const MUTED_KEY = 'rotom-dex-muted'
 const VOLUME_KEY = 'rotom-dex-volume'
 
-/** The loudest the voice can be set: twice the level the clips were recorded at. */
+/** Max volume, twice the recorded level */
 export const MAX_VOLUME = 2
 const clampVolume = (value: number) => Math.min(MAX_VOLUME, Math.max(0, Math.round(value * 20) / 20))
 
-/** How long the opening buzz plays before the words start. */
+/** Buzz length before the words */
 const BUZZ_MS = 230
-/** The breath between one clip and the next. */
+/** Pause between clips */
 const PART_GAP_MS = 90
 const BUZZ = /^BZZ+T[!?]*\s*/i
 
-/** How long Rotom mouths a line when its voice is switched off. */
+/** How long Rotom mouths a line when muted */
 const silentSeconds = (text: string) => Math.min(8, Math.max(1.2, text.length / 17))
 
 export interface RotomVoice {
   muted: boolean
-  /** True while Rotom is talking (or mouthing the words when muted). */
+  /** True while talking or mouthing when muted */
   speaking: boolean
-  /**
-   * Says one or more lines, one after another. Anything already being said is
-   * cut off first. Only lines that have been recorded are spoken; the rest
-   * are for the text box alone.
-   */
+  /** Says lines in order, cutting off what was playing. Only recorded lines are spoken */
   say: (...lines: string[]) => void
   stop: () => void
   toggleMuted: () => void
-  /** How loud the voice is: 0 is silent, 1 is as recorded, up to MAX_VOLUME. */
+  /** Volume from 0 to MAX VOLUME, 1 is as recorded */
   volume: number
-  /** Sets the volume and remembers it in this browser. Turning it up also switches the voice back on. */
+  /** Sets and saves the volume, turning it up unmutes */
   setVolume: (value: number) => void
 }
 
-/**
- * Rotom's voice: recorded clips, and nothing else.
- *
- * Every line Rotom always says the same way has a clip (see lib/lines.ts).
- * The entries it looks up come from PokéAPI by the thousand and have none, so
- * Rotom announces them in its own voice and leaves the reading to the text
- * box; no synthesised voice stands in, because none sounds like Rotom.
- * `say` cancels whatever was playing first, so quick scans never stack up
- * into overlapping chatter, and a leading "BZZZT!" is played as a
- * synthesised buzz rather than spoken.
- */
+/** Rotom voice from recorded clips only. Looked up entries have no clip and stay in the text box.
+    Each call cancels the last, and a leading BZZZT plays as a buzz */
 export function useRotomVoice(): RotomVoice {
   const [speaking, setSpeaking] = useState(false)
   const [muted, setMuted] = useState(() => {
@@ -66,15 +53,15 @@ export function useRotomVoice(): RotomVoice {
     }
   })
 
-  // Held in refs so `say` stays the same function across renders.
+  // Refs keep say stable across renders
   const mutedRef = useRef(muted)
   const volumeRef = useRef(volume)
-  /** The clips are mixed through this gain, which is what lets them go louder than they were recorded. */
+  /** Gain node, lets clips go louder than recorded */
   const gain = useRef<GainNode | null>(null)
   const timers = useRef<number[]>([])
-  /** Identifies the run of lines now being said; anything from an older run is ignored. */
+  /** Current run id, older runs are ignored */
   const run = useRef<object | null>(null)
-  /** The clip now playing, if any. */
+  /** Clip playing now */
   const playing = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -82,7 +69,7 @@ export function useRotomVoice(): RotomVoice {
   }, [muted])
   useEffect(() => {
     volumeRef.current = volume
-    // A clip already playing follows the control at once.
+    // Apply volume to a playing clip at once
     if (gain.current) gain.current.gain.value = volume
     else if (playing.current) playing.current.volume = Math.min(1, volume)
   }, [volume])
@@ -98,11 +85,11 @@ export function useRotomVoice(): RotomVoice {
 
   const say = useCallback(
     (...lines: string[]) => {
-      // 1. Cancel whatever is playing so lines never overlap.
+      // Stop what is playing
       stop()
 
       const startsWithBuzz = BUZZ.test(lines[0] ?? '')
-      // 2. Keep the lines that have a recording; the others are not spoken.
+      // Keep only recorded lines
       const clips = lines.flatMap((line) => {
         const url = voiceClip(line)
         return url ? [{ url, words: line.replace(BUZZ, '').trim() }] : []
@@ -116,7 +103,7 @@ export function useRotomVoice(): RotomVoice {
       setSpeaking(true)
 
       if (mutedRef.current) {
-        // No sound, but Rotom still mouths the words for about as long as they take.
+        // Muted, still mouth the words
         later(() => {
           if (live()) stop()
         }, silentSeconds(clips.map((clip) => clip.words).join(' ')) * 1000)
@@ -124,7 +111,7 @@ export function useRotomVoice(): RotomVoice {
       }
       if (startsWithBuzz) sfx.buzz(Math.min(1.5, volumeRef.current))
 
-      // 3. Play the clips back to back. One that will not load or play is skipped.
+      // Play clips back to back, skip broken ones
       const playFrom = (index: number, delay: number) => {
         if (!live()) return
         const clip = clips[index]
@@ -134,7 +121,7 @@ export function useRotomVoice(): RotomVoice {
         }
         const player = new Audio(clip.url)
         playing.current = player
-        // Through the gain where Web Audio is available; otherwise the element's own volume (which tops out at 1).
+        // Use the gain if available, else element volume up to 1
         const context = audio()
         try {
           if (!context) throw new Error('no Web Audio')
@@ -157,7 +144,7 @@ export function useRotomVoice(): RotomVoice {
           if (live()) player.play().catch(next)
         }, delay)
       }
-      // The mouth starts moving at once, in step with the success spin; the words follow the buzz.
+      // Mouth starts now, words follow the buzz
       playFrom(0, startsWithBuzz ? BUZZ_MS : 60)
     },
     [stop],
@@ -169,7 +156,7 @@ export function useRotomVoice(): RotomVoice {
       try {
         localStorage.setItem(MUTED_KEY, String(next))
       } catch {
-        // Private mode: the choice just lasts for this visit.
+        // Private mode, keep it for this visit
       }
       return next
     })
@@ -181,15 +168,15 @@ export function useRotomVoice(): RotomVoice {
     setVolumeState(next)
     try {
       localStorage.setItem(VOLUME_KEY, String(next))
-      // Reaching for the volume means wanting to hear it.
+      // Turning it up unmutes
       if (next > 0) localStorage.setItem(MUTED_KEY, 'false')
     } catch {
-      // Private mode: the choice just lasts for this visit.
+        // Private mode, keep it for this visit
     }
     if (next > 0) setMuted(false)
   }, [])
 
-  // Never leave Rotom talking to an empty room.
+  // Stop talking on unmount
   useEffect(() => {
     window.addEventListener('pagehide', stop)
     return () => {
